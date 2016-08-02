@@ -1,10 +1,29 @@
-# MyComponent Add-on for Vaadin 7
+# vaadin-excel-exporter for Vaadin 7
 
-MyComponent is a UI component add-on for Vaadin 7.
+vaadin-excel-exporter is a utility add-on for Vaadin 7. It is a single point solution providing consistent and configurable support for 
+exporting data of Vaadin Table, Tree Table and Grid in Excel format.
+
+## Why do we need this addon?
+
+1) Exporting the screen data is a frequent task required in most of the applications. There are several 
+helper technologies such as POI which help us in bringing the Export feature in place but a developer 
+needs to take it up everytime he wants to implement.
+2) Vaadin providing so many components for representation of data such as Table, Tree Table and Grid, 
+which again raises a need for a utility that is easy and configurable to be used with varied component 
+wihtout the pain of writing the logic to generate the Excel.
+3) A consistent excel format throughout the application which would enhance user experience.
+4) Can be integrated with any Vaadin application with just few lines of configuration code.
+
+## What dependencies are required?
+JDK 1.7 or above
+POI 3.9
+POI-OOXML 3.9
+Apache Commons IO library (http://commons.apache.org/io/) v2.2
+net.karneim.pojobuilder 3.4.0 and above
 
 ## Online demo
 
-Try the add-on demo at <url of the online demo>
+Try the add-on demo at URL
 
 ## Download release
 
@@ -12,7 +31,7 @@ Official releases of this add-on are available at Vaadin Directory. For Maven in
 
 ## Building and running demo
 
-git clone <url of the MyComponent repository>
+git clone https://github.com/bonprix/vaadin-excel-exporter
 mvn clean install
 cd demo
 mvn jetty:run
@@ -51,15 +70,19 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
  
 ## Release notes
 
-### Version 0.0.0-SNAPSHOT
-- ...
-- ...
+
+### Version 1.0.0-SNAPSHOT
+- Initial release
 
 ## Roadmap
 
-This component is developed as a hobby with no public roadmap or any guarantees of upcoming releases. That said, the following features are planned for upcoming releases:
-- ...
-- ...
+Upcoming releases:
+- Adding a total row at the bottom for components with optional granular configuration of the rows
+- Specifying a row header which can allow horizontal data as well.
+- Reflecting some column generator logic as well in the Excel. For Example suffixes cm, kg, $ etc...
+- Export of selected records wherever applicable
+- Optional Footer Section
+- Legend for better understanding
 
 ## Issue tracking
 
@@ -79,7 +102,8 @@ Contributions are welcome, but there are no guarantees that they are accepted as
 
 Add-on is distributed under Apache License 2.0. For license terms, see LICENSE.txt.
 
-MyComponent is written by <...>
+vaadin-excel-exporter is written by Kartik Suba @ Direction Software Solutions, India.
+For Client: Bonprix Handelsgesellschaft mbH
 
 # Developer Guide
 
@@ -87,24 +111,70 @@ MyComponent is written by <...>
 
 Here is a simple example on how to try out the add-on component:
 
-<...>
+/* Configuring Components */
+ExportExcelComponentConfiguration componentConfig1 = new ExportExcelComponentConfigurationBuilder().withTable(this.tableWithBeanItemContainer) //Your Table or component goes here
+                                                                                                           .withVisibleProperties(this.tableWithBeanItemContainer.getVisibleColumns())
+                                                                                                           .withColumnHeaderKeys(this.tableWithBeanItemContainer.getColumnHeaders()) 
+                                                                                                           .build();
+/* Configuring Sheets */
+ArrayList<ExportExcelComponentConfiguration> componentList1 = new ArrayList<ExportExcelComponentConfiguration>();
+componentList1.add(componentConfig1);
+
+ExportExcelSheetConfiguration sheetConfig1 = new ExportExcelSheetConfigurationBuilder().withReportTitle("Excel Report")
+                                                                                               .withSheetName("Excel Report")
+                                                                                               .withComponentConfigs(componentList1)
+                                                                                               .withIsHeaderSectionRequired(Boolean.TRUE)
+                                                                                               .build();
+                                             
+/* Configuring Excel */
+ArrayList<ExportExcelSheetConfiguration> sheetList = new ArrayList<ExportExcelSheetConfiguration>();
+sheetList.add(sheetConfig1);
+
+ExportExcelConfiguration config1 = new ExportExcelConfigurationBuilder().withGeneratedBy("Kartik Suba")
+                                                                                .withSheetConfigs(sheetList)
+                                                                                .build();
+
+ExportToExcelUtility<DataModel> exportToExcelUtility = new ExportToExcelUtility<DataModel>(this.tableWithBeanItemContainer.getUI(), config1, DataModel.class);
+exportToExcelUtility.setSourceUI(UI.getCurrent());
+exportToExcelUtility.setResultantExportType(ExportType.XLSX);
+exportToExcelUtility.export();
 
 For a more comprehensive example, see src/test/java/org/vaadin/template/demo/DemoUI.java
 
 ## Features
 
-### Feature A
+It is highly configurable and provides configuration at three levels namely File Level, Sheet Level, Component Level.
 
-<...>
+### For each file you can configure
+- List of Sheets
+- Export File Name
+- Generated By
+- Export Type (xlsx or xls)
 
-### Feature B
+### For each sheet you can configure
+- Sheet Name
+- Report Title Row
+- Generated By Row
+- List of Components inside the sheet
+- FieldGroup - for showing filters selected on the screen for the selected data
+- Additional Header Info - HashMap for custom data (Key Value Pair)
+- Date Format
+- Number Formats
+- XSSFCellStyle for each content section of the screen
 
-<...>
+Note that the Number formats by itself manages the thousand separator and decimal point 
+for different locales. For Eg: For English the decimal point is (.) and thousand seperator is (,), but for 
+German locale it is the reverse. But the code handles it by its own.
 
-### Feature C
+### For each component you can configure
+- Component - Tree table or Grid or Table
+- It supports all kinds of containers - Indexed, BeanItem, Hierarchical
+- Visible properties
+- Properties requiring date formatting
+- Properties requiring Float formatting
+- Properties requiring Integer formatting
+- Column Header Texts
+- Component Header and Content Styles
+- Column Freeze and Header Freeze feature
 
-<...>
-
-## API
-
-MyComponent JavaDoc is available online at <...>
+However, if none of these are specified, it would generate the Excel with default values and styles.
