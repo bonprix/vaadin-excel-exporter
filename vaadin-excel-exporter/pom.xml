@@ -98,6 +98,22 @@
 			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/net.karneim/pojobuilder -->
+		<dependency>
+    		<groupId>net.karneim</groupId>
+    		<artifactId>pojobuilder</artifactId>
+    		<version>2.3.3</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
+		<dependency>
+    		<groupId>org.apache.poi</groupId>
+    		<artifactId>poi-ooxml</artifactId>
+   			 <version>3.9</version>
+		</dependency>
+		
+		
 	</dependencies>
 
 	<build>
@@ -176,7 +192,7 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			
 			<!-- Testing -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -184,6 +200,46 @@
 				<version>2.14.1</version>
 			</plugin>
 		</plugins>
+		
+		<pluginManagement>
+			<plugins>
+			<plugin>
+					<groupId>org.bsc.maven</groupId>
+					<artifactId>maven-processor-plugin</artifactId>
+					<version>${maven-processor-plugin.version}</version>
+					<executions>
+						<execution>
+							<id>process</id>
+							<goals>
+								<goal>process</goal>
+							</goals>
+							<phase>generate-sources</phase>
+						</execution>
+					</executions>
+				</plugin>
+				
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>add-source</id>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>add-source</goal>
+							</goals>
+							<configuration>
+								<sources>
+									<source>target/generated-sources/apt</source>
+									<source>target/generated-sources/classes</source>
+								</sources>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				
+			</plugins>
+		</pluginManagement>
 
 		<!-- This is needed for the sources required by the client-side compiler to be 
 			included in the produced JARs -->
