@@ -7,13 +7,13 @@ import java.util.List;
 import javax.servlet.annotation.WebServlet;
 
 import org.vaadin.addons.ExportExcelComponentConfiguration;
-import org.vaadin.addons.ExportExcelComponentConfigurationBuilder;
 import org.vaadin.addons.ExportExcelConfiguration;
-import org.vaadin.addons.ExportExcelConfigurationBuilder;
 import org.vaadin.addons.ExportExcelSheetConfiguration;
-import org.vaadin.addons.ExportExcelSheetConfigurationBuilder;
 import org.vaadin.addons.ExportToExcelUtility;
 import org.vaadin.addons.ExportType;
+import org.vaadin.addons.builder.ExportExcelComponentConfigurationBuilder;
+import org.vaadin.addons.builder.ExportExcelConfigurationBuilder;
+import org.vaadin.addons.builder.ExportExcelSheetConfigurationBuilder;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -331,13 +331,19 @@ public class DemoUI extends UI {
     }
 
     private ColumnGenerator getNonEditableColumnGenerator(final String suffix) {
-        return (source, itemId, columnId) -> {
-            Label label = new Label();
-            Object obj = getValue(source, itemId, columnId);
-            if (obj != null) {
-                label.setValue(obj.toString());
+        return new ColumnGenerator() {
+
+            @Override
+            public Object generateCell(final Table source, final Object itemId, final Object columnId) {
+
+                Label label = new Label();
+                Object obj = getValue(source, itemId, columnId);
+                if (obj != null) {
+                    label.setValue(obj.toString());
+                }
+                return label;
+
             }
-            return label;
         };
     }
 

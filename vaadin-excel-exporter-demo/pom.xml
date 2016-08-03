@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.vaadin.addons</groupId>
 	<artifactId>vaadin-excel-exporter-demo</artifactId>
 	<packaging>war</packaging>
-	<version>1.0.0-SNAPSHOT</version>
-	<name>Vaadin Excel Exporter Demo</name>
+	<version>1.0.2-SNAPSHOT</version>
+	<name>Excel Exporter Demo</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
 		<vaadin.version>7.6.6</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 		<jetty.plugin.version>9.2.3.v20140905</jetty.plugin.version>
@@ -26,7 +25,7 @@
 		<url>git://github.com/bonprix/vaadin-excel-exporter.git</url>
 		<connection>scm:git:git://github.com/bonprix/vaadin-excel-exporter.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com:/bonprix/vaadin-excel-exporter.git</developerConnection>
-    	<tag>HEAD</tag>
+    	<tag>vaadin-excel-exporter-root-1.0.0-SNAPSHOT</tag>
   	</scm>
 
 	<issueManagement>
