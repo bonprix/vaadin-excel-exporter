@@ -802,6 +802,22 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return this.workbook;
     }
 
+    public Boolean getIsPreProcessingPerformed() {
+        return this.isPreProcessingPerformed;
+    }
+
+    public void setIsPreProcessingPerformed(final Boolean isPreProcessingPerformed) {
+        this.isPreProcessingPerformed = isPreProcessingPerformed;
+    }
+
+    public ExportExcelConfiguration getExportExcelConfiguration() {
+        return this.exportExcelConfiguration;
+    }
+
+    public void setExportExcelConfiguration(final ExportExcelConfiguration exportExcelConfiguration) {
+        this.exportExcelConfiguration = exportExcelConfiguration;
+    }
+
     protected Map<String, XSSFCellStyle> createStyles(final XSSFWorkbook wb) {
         Map<String, XSSFCellStyle> styles = new HashMap<String, XSSFCellStyle>();
         XSSFDataFormat fmt = wb.createDataFormat();
@@ -1087,4 +1103,5 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         }
         return modifiedValue;
     }
+
 }

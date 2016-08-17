@@ -4,7 +4,7 @@
 	<groupId>org.vaadin.addons</groupId>
 	<artifactId>vaadin-excel-exporter-demo</artifactId>
 	<packaging>war</packaging>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.3-SNAPSHOT</version>
 	<name>Excel Exporter Demo</name>
 
 	<properties>
@@ -125,10 +125,6 @@
 				<configuration>
 					<filesets>
 						<fileset>
-							<!-- Clean-up widgetset required for "inplace" compilation -->
-							<directory>${basedir}/src/main/webapp/VAADIN/widgetsets</directory>
-						</fileset>
-						<fileset>
 							<!-- Clean-up gwt cache -->
 							<directory>${basedir}/src/main/webapp/VAADIN/gwt-unitCache</directory>
 						</fileset>
@@ -142,10 +138,8 @@
 		        <configuration>
 		        	<packagingExcludes>
 						**/VAADIN/gwt-unitCache/**,
-						**/VAADIN/widgetsets/WEB-INF/**,
 						**/WEB-INF/classes/gwt-unitCache/**,
-						**/WEB-INF/classes/themes/**,
-						**/WEB-INF/classes/widgetsets/**
+						**/WEB-INF/classes/themes/**
 					</packagingExcludes>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 		        </configuration>
@@ -157,8 +151,6 @@
 				<version>${vaadin.plugin.version}</version>
 				<configuration>
 					<extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
-					<webappDirectory>${basedir}/src/main/webapp/VAADIN/widgetsets</webappDirectory>
-					<hostedWebapp>${basedir}/src/main/webapp/VAADIN/widgetsets</hostedWebapp>
 					<noServer>true</noServer>
 					<persistentunitcachedir>${basedir}/target/tmp/gwt-unitCache</persistentunitcachedir>
 					<compileReport>false</compileReport>
@@ -173,7 +165,6 @@
 						</configuration>
 						<goals>
 							<goal>resources</goal>
-							<goal>update-widgetset</goal>
 							<goal>compile</goal>
 						</goals>
 					</execution>
