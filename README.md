@@ -137,7 +137,7 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 - Added Column Formatter Logic
 
 - Also developed three formatters as built in formatters namely
--SuffixColumnFormatter(String suffix) // can add suffix to the container/model value such as $, %, kg etc...
+- SuffixColumnFormatter(String suffix) // can add suffix to the container/model value such as $, %, kg etc...
 - PrefixColumnFormatter(String prefix // can add prefix to the container/model value 
 - BooleanColumnFormatter(String trueValue, String falseValue) // Give meaningful alias to true and false like Yes/No, Active/De-Active etc.. Requires the column to be also set withBooleanFormattingProperties
 
