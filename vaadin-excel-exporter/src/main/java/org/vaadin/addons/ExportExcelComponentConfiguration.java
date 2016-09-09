@@ -1,10 +1,13 @@
 package org.vaadin.addons;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import net.karneim.pojobuilder.GeneratePojoBuilder;
 
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.vaadin.addons.formatter.ColumnFormatter;
 
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Table;
@@ -23,12 +26,15 @@ public class ExportExcelComponentConfiguration {
     ArrayList<String> dateFormattingProperties;
     ArrayList<String> integerFormattingProperties;
     ArrayList<String> floatFormattingProperties;
+    ArrayList<String> booleanFormattingProperties;
     String[] columnHeaderKeys;
     XSSFCellStyle tableHeaderStyle;
     XSSFCellStyle tableContentStyle;
 
     XSSFCellStyle rTableHeaderStyle = null;
     XSSFCellStyle rTableContentStyle = null;
+
+    HashMap<Object, ColumnFormatter> columnFormatters = new LinkedHashMap<Object, ColumnFormatter>();
 
     Table table;
 
@@ -139,5 +145,28 @@ public class ExportExcelComponentConfiguration {
 
     public void setTableContentStyle(final XSSFCellStyle tableContentStyle) {
         this.tableContentStyle = tableContentStyle;
+    }
+
+    public HashMap<Object, ColumnFormatter> getColumnFormatters() {
+        return this.columnFormatters;
+    }
+
+    public void setColumnFormatters(final HashMap<Object, ColumnFormatter> columnFormatters) {
+        this.columnFormatters = columnFormatters;
+    }
+
+    public ColumnFormatter getColumnFormatter(final Object columnId) {
+        if (this.columnFormatters != null && !this.columnFormatters.isEmpty() && this.columnFormatters.containsKey(columnId)) {
+            return this.columnFormatters.get(columnId);
+        }
+        return null;
+    }
+
+    public ArrayList<String> getBooleanFormattingProperties() {
+        return this.booleanFormattingProperties;
+    }
+
+    public void setBooleanFormattingProperties(final ArrayList<String> booleanFormattingProperties) {
+        this.booleanFormattingProperties = booleanFormattingProperties;
     }
 }

@@ -38,6 +38,7 @@ import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder.BorderSide;
 
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.util.IndexedContainer;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
@@ -590,6 +591,27 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                                                 .getItem(itemId)
                                                 .getItemProperty(visibleColumns[columns])
                                                 .getValue();
+                    if (componentConfiguration.getTable()
+                                              .getColumnGenerator(visibleColumns[columns]) != null) {
+                        try {
+                            obj = componentConfiguration.getTable()
+                                                        .getColumnGenerator(visibleColumns[columns])
+                                                        .generateCell(componentConfiguration.getTable(), itemId, visibleColumns[columns]);
+                            if (obj != null && !(obj instanceof Component) && !(obj instanceof String)) {
+                                // Avoid errors if a generator returns
+                                // something
+                                // other than a Component or a String
+                                obj = obj.toString();
+                            }
+                            /*
+                             * else if (obj instanceof Component) { obj = componentConfiguration.getTable() .getItem(itemId)
+                             * .getItemProperty(visibleColumns[columns]) .getValue(); }
+                             */
+                        }
+                        catch (Exception e) {
+                        }
+                    }
+
                 }
                 else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
                                                                                            .getContainerDataSource() instanceof IndexedContainer) {
@@ -613,23 +635,58 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                     else if (componentConfiguration.getIntegerFormattingProperties() != null
                             && componentConfiguration.getIntegerFormattingProperties()
                                                      .contains(String.valueOf(visibleColumns[columns]))) {
-                        myCell.setCellValue(localizedFormat(obj != null && !String.valueOf(obj)
-                                                                                  .isEmpty() ? String.valueOf(obj) : null, Boolean.TRUE));
+
+                        String formattedInteger = localizedFormat(obj != null && !String.valueOf(obj)
+                                                                                        .isEmpty() ? String.valueOf(obj) : null, Boolean.TRUE);
+                        myCell.setCellValue(applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, formattedInteger) != null ? applyColumnFormatter(visibleColumns,
+                                                                                                                                                                           componentConfiguration,
+                                                                                                                                                                           itemId,
+                                                                                                                                                                           columns,
+                                                                                                                                                                           formattedInteger)
+                                : formattedInteger);
                     }
                     else if (componentConfiguration.getFloatFormattingProperties() != null
                             && componentConfiguration.getFloatFormattingProperties()
                                                      .contains(String.valueOf(visibleColumns[columns]))) {
                         if (obj instanceof Double) {
-                            myCell.setCellValue(formatFloat((Double) obj));
+
+                            String formattedDouble = formatFloat((Double) obj);
+                            myCell.setCellValue(applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, formattedDouble) != null ? applyColumnFormatter(visibleColumns,
+                                                                                                                                                                              componentConfiguration,
+                                                                                                                                                                              itemId,
+                                                                                                                                                                              columns,
+                                                                                                                                                                              formattedDouble)
+                                    : formattedDouble);
                         }
                         else if (obj instanceof BigDecimal) {
                             {
-                                myCell.setCellValue(formatFloat(((BigDecimal) obj).doubleValue()));
+                                String formattedBigDecimal = formatFloat(((BigDecimal) obj).doubleValue());
+                                myCell.setCellValue(applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, formattedBigDecimal) != null ? applyColumnFormatter(visibleColumns,
+                                                                                                                                                                                      componentConfiguration,
+                                                                                                                                                                                      itemId,
+                                                                                                                                                                                      columns,
+                                                                                                                                                                                      formattedBigDecimal)
+                                        : formattedBigDecimal);
                             }
                         }
                     }
+                    else if (componentConfiguration.getBooleanFormattingProperties() != null
+                            && componentConfiguration.getBooleanFormattingProperties()
+                                                     .contains(String.valueOf(visibleColumns[columns]))) {
+                        myCell.setCellValue(applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, Boolean.valueOf((boolean) obj)) != null ? applyColumnFormatter(visibleColumns,
+                                                                                                                                                                                         componentConfiguration,
+                                                                                                                                                                                         itemId,
+                                                                                                                                                                                         columns,
+                                                                                                                                                                                         Boolean.valueOf((boolean) obj))
+                                : obj.toString());
+                    }
                     else {
-                        myCell.setCellValue(obj.toString());
+                        myCell.setCellValue(applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, obj.toString()) != null ? applyColumnFormatter(visibleColumns,
+                                                                                                                                                                         componentConfiguration,
+                                                                                                                                                                         itemId,
+                                                                                                                                                                         columns,
+                                                                                                                                                                         obj.toString())
+                                : obj.toString());
                     }
                 }
                 else {
@@ -648,6 +705,20 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String applyColumnFormatter(final Object[] visibleColumns, final ExportExcelComponentConfiguration componentConfiguration, final Object itemId,
+            final int columns, final Object obj) {
+        String formatted = null;
+        if (componentConfiguration.getColumnFormatter(visibleColumns[columns]) != null) {
+            try {
+                formatted = (String) componentConfiguration.getColumnFormatter(visibleColumns[columns])
+                                                           .generateCell(obj, itemId, visibleColumns[columns]);
+            }
+            catch (Exception e) {
+            }
+        }
+        return formatted;
     }
 
     public void getAllMethods(Class type, final Hashtable<String, Method> map) {

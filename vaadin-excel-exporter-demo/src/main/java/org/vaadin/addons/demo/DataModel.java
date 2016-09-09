@@ -13,8 +13,8 @@ public class DataModel {
     String plannedPrinter = null;
     String cheapest = null;
     String contractor = null;
-    String totalCosts = null;
-    String differenceToMin = null;
+    Double totalCosts = null;
+    Double differenceToMin = null;
     String comment = null;
     String coverPartner = null;
     String contentProduction = null;
@@ -28,6 +28,25 @@ public class DataModel {
     Double senderCost = null;
     Double frightCoverToFinishingCost = null;
     Double diffToMinTransportContent = null;
+    Boolean active;
+
+    public Boolean getActive() {
+        return this.active;
+    }
+
+    public void setActive(final Boolean active) {
+        this.active = active;
+    }
+
+    public Integer getCounter() {
+        return this.counter;
+    }
+
+    public void setCounter(final Integer counter) {
+        this.counter = counter;
+    }
+
+    Integer counter;
 
     public String getCountry() {
         return this.country;
@@ -117,19 +136,19 @@ public class DataModel {
         this.contentSender = contentSender;
     }
 
-    public String getTotalCosts() {
+    public Double getTotalCosts() {
         return this.totalCosts;
     }
 
-    public void setTotalCosts(final String totalCosts) {
+    public void setTotalCosts(final Double totalCosts) {
         this.totalCosts = totalCosts;
     }
 
-    public String getDifferenceToMin() {
+    public Double getDifferenceToMin() {
         return this.differenceToMin;
     }
 
-    public void setDifferenceToMin(final String differenceToMin) {
+    public void setDifferenceToMin(final Double differenceToMin) {
         this.differenceToMin = differenceToMin;
     }
 
