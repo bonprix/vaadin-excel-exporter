@@ -148,10 +148,12 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 
 ## Roadmap
 
+Recently Released :
+- Reflecting some column generator logic as well in the Excel. For Example suffixes cm, kg, $ etc...
+
 Upcoming releases:
 - Adding a total row at the bottom for components with optional granular configuration of the rows
 - Specifying a row header which can allow horizontal data as well.
-- Reflecting some column generator logic as well in the Excel. For Example suffixes cm, kg, $ etc...
 - Export of selected records wherever applicable
 - Optional Footer Section
 - Legend for better understanding
