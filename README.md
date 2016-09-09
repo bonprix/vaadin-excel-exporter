@@ -56,6 +56,7 @@ German locale it is the reverse. But the code handles it by its own.
 - Column Header Texts
 - Component Header and Content Styles
 - Column Freeze and Header Freeze feature
+- Provide Column Formatters. Use built in Suffix, Prefix formatters.
 
 However, if none of these are specified, it would generate the Excel with default values and styles.
 
@@ -70,7 +71,7 @@ http://bonprix.jelastic.servint.net/vaadin-excel-exporter-demo/
 <dependency>
     <groupId>org.vaadin.addons</groupId>
 	<artifactId>vaadin-excel-exporter</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.3</version>
 </dependency>
 
 <repository>
