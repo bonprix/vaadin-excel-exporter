@@ -141,9 +141,9 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 - PrefixColumnFormatter(String prefix // can add prefix to the container/model value 
 - BooleanColumnFormatter(String trueValue, String falseValue) // Give meaningful alias to true and false like Yes/No, Active/De-Active etc.. Requires the column to be also set withBooleanFormattingProperties
 
-Note: For columns mentioned in withFloatFormattingProperties and withIntegerFormattingProperties, the above formatting gets applied after the Integer and Float formatting is performed on the container/model value.
+- Note: For columns mentioned in withFloatFormattingProperties and withIntegerFormattingProperties, the above formatting gets applied after the Integer and Float formatting is performed on the container/model value.
 
-	- Updated the Demo Project to show case the same.
+- Updated the Demo Project to show case the same.
 
 
 ## Roadmap
