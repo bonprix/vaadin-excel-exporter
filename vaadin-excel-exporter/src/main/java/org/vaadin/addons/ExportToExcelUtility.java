@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -36,6 +37,8 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder.BorderSide;
 
+import com.vaadin.data.Container;
+import com.vaadin.data.Property;
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.IndexedContainer;
@@ -586,6 +589,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             for (int columns = 0; columns < visibleColumns.length; columns++) {
 
                 Object obj = null;
+                Grid configGrid = componentConfiguration.getGrid();
+                
                 if (componentConfiguration.getTable() != null && componentConfiguration.getTable()
                                                                                        .getContainerDataSource() instanceof IndexedContainer) {
                     obj = componentConfiguration.getTable()
@@ -614,16 +619,22 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                     }
 
                 }
-                else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof IndexedContainer || 
-                                                                     componentConfiguration.getGrid()
-                                                                     						.getContainerDataSource() instanceof BeanItemContainer )  
+                else if (configGrid != null && configGrid.getContainerDataSource() instanceof IndexedContainer || 
+                                                                     configGrid.getContainerDataSource() instanceof BeanItemContainer )  
                 {
-                    obj = componentConfiguration.getGrid()
-                                                .getContainerDataSource()
+//                	Container.Indexed configContainer = configGrid.getContainerDataSource();
+//                	Grid.Column propertyColumn = (Grid.Column)visibleColumns[columns];
+//                	Object propObj = propertyColumn.getPropertyId();
+//                	Property prop = configContainer.getContainerProperty(itemId, propObj);
+//                	obj = prop.getValue();
+                	
+                	obj = configGrid.getContainerDataSource()
+                			  .	getContainerProperty(itemId, ((Grid.Column)visibleColumns[columns]).getPropertyId())
+                    		  .getValue();
+/*                    obj = configGrid.getContainerDataSource()
                                                 .getContainerProperty(itemId, visibleColumns[columns])
                                                 .getValue();
-                }
+*/                }
                 else if (this.methodMap.containsKey(String.valueOf(visibleColumns[columns]))) {
                     obj = this.methodMap.get(String.valueOf(visibleColumns[columns]))
                                         .invoke(itemId);
