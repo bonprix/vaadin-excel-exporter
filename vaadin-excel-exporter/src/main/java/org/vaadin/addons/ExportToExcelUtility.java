@@ -37,6 +37,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder.BorderSide;
 
 import com.vaadin.data.fieldgroup.FieldGroup;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
@@ -614,7 +615,10 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
                 }
                 else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof IndexedContainer) {
+                                                                                           .getContainerDataSource() instanceof IndexedContainer || 
+                                                                     componentConfiguration.getGrid()
+                                                                     						.getContainerDataSource() instanceof BeanItemContainer )  
+                {
                     obj = componentConfiguration.getGrid()
                                                 .getContainerDataSource()
                                                 .getContainerProperty(itemId, visibleColumns[columns])
