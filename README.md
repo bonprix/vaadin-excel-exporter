@@ -7,7 +7,7 @@ exporting data of Vaadin Table, Tree Table and Grid in Excel format.
 
 1) Exporting the screen data is a frequent task required in most of the applications. There are several 
 helper technologies such as POI which help us in bringing the Export feature in place but a developer 
-needs to take it up everytime he wants to implement.
+needs to take it up every time he wants to implement.
 2) Vaadin providing so many components for representation of data such as Table, Tree Table and Grid, 
 which again raises a need for a utility that is easy and configurable to be used with varied component 
 wihtout the pain of writing the logic to generate the Excel.
@@ -57,6 +57,8 @@ German locale it is the reverse. But the code handles it by its own.
 - Component Header and Content Styles
 - Column Freeze and Header Freeze feature
 - Provide Column Formatters. Use built in Suffix, Prefix formatters.
+- Multiple Header Rows
+- Multiple Footer Rows
 
 However, if none of these are specified, it would generate the Excel with default values and styles.
 
@@ -71,7 +73,7 @@ http://bonprix.jelastic.servint.net/vaadin-excel-exporter-demo/
 <dependency>
     <groupId>org.vaadin.addons</groupId>
 	<artifactId>vaadin-excel-exporter</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.4</version>
 </dependency>
 
 <repository>
@@ -146,6 +148,18 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 
 - Updated the Demo Project to show case the same.
 
+### Version 1.0.4
+- Added ComponentHeaderConfiguration and ComponentFooterConfiguration
+
+- These would allow the user to configure multiple headers and footers for each component.
+
+- The ComponentHeaderConfiguration provides support for Grid.HeaderRow so in case you have appended headers in your grid, you can pass them directly to the header configuration.
+- However, it also supports custom header through String[]
+- You can also merge the header cells by specifying the start property, end property and display string in the MergedCell bean.
+
+- Similar support is available for ComponentFooterConfiguration
+
+- Updated the Demo Project to showcase the same. Also you can refer to the advance snipped section for example.
 
 ## Roadmap
 
@@ -153,10 +167,8 @@ Recently Released :
 - Reflecting some column generator logic as well in the Excel. For Example suffixes cm, kg, $ etc...
 
 Upcoming releases:
-- Adding a total row at the bottom for components with optional granular configuration of the rows
 - Specifying a row header which can allow horizontal data as well.
 - Export of selected records wherever applicable
-- Optional Footer Section
 - Legend for better understanding
 
 ## Issue tracking
