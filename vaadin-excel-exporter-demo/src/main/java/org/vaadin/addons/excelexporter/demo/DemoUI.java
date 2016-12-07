@@ -1,4 +1,4 @@
-package org.vaadin.addons.demo;
+package org.vaadin.addons.excelexporter.demo;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -8,17 +8,18 @@ import java.util.List;
 
 import javax.servlet.annotation.WebServlet;
 
-import org.vaadin.addons.ExportExcelComponentConfiguration;
-import org.vaadin.addons.ExportExcelConfiguration;
-import org.vaadin.addons.ExportExcelSheetConfiguration;
-import org.vaadin.addons.ExportToExcelUtility;
-import org.vaadin.addons.ExportType;
-import org.vaadin.addons.builder.ExportExcelComponentConfigurationBuilder;
-import org.vaadin.addons.builder.ExportExcelConfigurationBuilder;
-import org.vaadin.addons.builder.ExportExcelSheetConfigurationBuilder;
-import org.vaadin.addons.formatter.BooleanColumnFormatter;
-import org.vaadin.addons.formatter.ColumnFormatter;
-import org.vaadin.addons.formatter.SuffixColumnFormatter;
+import org.vaadin.addons.excelexporter.ExportExcelComponentConfiguration;
+import org.vaadin.addons.excelexporter.ExportExcelConfiguration;
+import org.vaadin.addons.excelexporter.ExportExcelSheetConfiguration;
+import org.vaadin.addons.excelexporter.ExportToExcelUtility;
+import org.vaadin.addons.excelexporter.ExportType;
+import org.vaadin.addons.excelexporter.builder.ComponentHeaderConfigurationBuilder;
+import org.vaadin.addons.excelexporter.builder.ExportExcelComponentConfigurationBuilder;
+import org.vaadin.addons.excelexporter.builder.ExportExcelConfigurationBuilder;
+import org.vaadin.addons.excelexporter.builder.ExportExcelSheetConfigurationBuilder;
+import org.vaadin.addons.excelexporter.formatter.BooleanColumnFormatter;
+import org.vaadin.addons.excelexporter.formatter.ColumnFormatter;
+import org.vaadin.addons.excelexporter.formatter.SuffixColumnFormatter;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -130,38 +131,38 @@ public class DemoUI extends UI {
         for (DataModel orderPlacementReport : this.orderList) {
             Object itemId = this.indexedContainer.addItem();
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("country")
-                                 .setValue(orderPlacementReport.getCountry());
+                    .getItemProperty("country")
+                    .setValue(orderPlacementReport.getCountry());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("productType")
-                                 .setValue(orderPlacementReport.getProductType());
+                    .getItemProperty("productType")
+                    .setValue(orderPlacementReport.getProductType());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("catalogue")
-                                 .setValue(orderPlacementReport.getCatalogue());
+                    .getItemProperty("catalogue")
+                    .setValue(orderPlacementReport.getCatalogue());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("plannedPrinter")
-                                 .setValue(orderPlacementReport.getPlannedPrinter());
+                    .getItemProperty("plannedPrinter")
+                    .setValue(orderPlacementReport.getPlannedPrinter());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("cheapest")
-                                 .setValue(orderPlacementReport.getCheapest());
+                    .getItemProperty("cheapest")
+                    .setValue(orderPlacementReport.getCheapest());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("contractor")
-                                 .setValue(orderPlacementReport.getContractor());
+                    .getItemProperty("contractor")
+                    .setValue(orderPlacementReport.getContractor());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("totalCosts")
-                                 .setValue(orderPlacementReport.getTotalCosts());
+                    .getItemProperty("totalCosts")
+                    .setValue(orderPlacementReport.getTotalCosts());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("differenceToMin")
-                                 .setValue(orderPlacementReport.getDifferenceToMin());
+                    .getItemProperty("differenceToMin")
+                    .setValue(orderPlacementReport.getDifferenceToMin());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("comment")
-                                 .setValue(orderPlacementReport.getComment());
+                    .getItemProperty("comment")
+                    .setValue(orderPlacementReport.getComment());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("active")
-                                 .setValue(orderPlacementReport.getActive());
+                    .getItemProperty("active")
+                    .setValue(orderPlacementReport.getActive());
             this.indexedContainer.getItem(itemId)
-                                 .getItemProperty("counter")
-                                 .setValue(orderPlacementReport.getCounter());
+                    .getItemProperty("counter")
+                    .setValue(orderPlacementReport.getCounter());
 
         }
 
@@ -239,70 +240,55 @@ public class DemoUI extends UI {
 
         /* Configuring Components */
         ExportExcelComponentConfiguration componentConfig1 = new ExportExcelComponentConfigurationBuilder().withTable(this.tableWithBeanItemContainer)
-                                                                                                           .withVisibleProperties(this.tableWithBeanItemContainer.getVisibleColumns())
-                                                                                                           .withColumnHeaderKeys(this.tableWithBeanItemContainer.getColumnHeaders())
-                                                                                                           .withIntegerFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("counter")))
-                                                                                                           .withFloatFormattingProperties(new ArrayList<String>(
-                                                                                                                                                  Arrays.asList("totalCosts",
-                                                                                                                                                                "differenceToMin")))
-                                                                                                           .withBooleanFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("active")))
-                                                                                                           .withColumnFormatters(columnFormatters)
-                                                                                                           .build();
+                .withVisibleProperties(this.tableWithBeanItemContainer.getVisibleColumns())
+                .withHeaderConfigs(Arrays.asList(new ComponentHeaderConfigurationBuilder().withColumnHeaderKeys(this.tableWithBeanItemContainer.getColumnHeaders())
+                                           .build()))
+                .withIntegerFormattingProperties(new ArrayList<String>(Arrays.asList("counter")))
+                .withFloatFormattingProperties(new ArrayList<String>(Arrays.asList("totalCosts", "differenceToMin")))
+                .withBooleanFormattingProperties(new ArrayList<String>(Arrays.asList("active")))
+                .withColumnFormatters(columnFormatters)
+                .build();
 
         ExportExcelComponentConfiguration componentConfig2 = new ExportExcelComponentConfigurationBuilder().withTable(this.tableWithIndexedContainer)
-                                                                                                           .withVisibleProperties(this.tableWithIndexedContainer.getVisibleColumns())
-                                                                                                           .withColumnHeaderKeys(this.tableWithIndexedContainer.getColumnHeaders())
-                                                                                                           .withIntegerFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("counter")))
-                                                                                                           .withFloatFormattingProperties(new ArrayList<String>(
-                                                                                                                                                  Arrays.asList("totalCosts",
-                                                                                                                                                                "differenceToMin")))
-                                                                                                           .withBooleanFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("active")))
-                                                                                                           .withColumnFormatters(columnFormatters)
-                                                                                                           .build();
+                .withVisibleProperties(this.tableWithIndexedContainer.getVisibleColumns())
+                .withHeaderConfigs(Arrays.asList(new ComponentHeaderConfigurationBuilder().withColumnHeaderKeys(this.tableWithIndexedContainer.getColumnHeaders())
+                                           .build()))
+                .withIntegerFormattingProperties(new ArrayList<String>(Arrays.asList("counter")))
+                .withFloatFormattingProperties(new ArrayList<String>(Arrays.asList("totalCosts", "differenceToMin")))
+                .withBooleanFormattingProperties(new ArrayList<String>(Arrays.asList("active")))
+                .withColumnFormatters(columnFormatters)
+                .build();
 
         ExportExcelComponentConfiguration componentConfig3 = new ExportExcelComponentConfigurationBuilder().withTreeTable(this.treeTable)
-                                                                                                           .withVisibleProperties(this.treeTable.getVisibleColumns())
-                                                                                                           .withColumnHeaderKeys(this.treeTable.getColumnHeaders())
-                                                                                                           .withColRowFreeze(3)
-                                                                                                           .withIntegerFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("counter")))
-                                                                                                           .withFloatFormattingProperties(new ArrayList<String>(
-                                                                                                                                                  Arrays.asList("totalCosts",
-                                                                                                                                                                "differenceToMin")))
-                                                                                                           .withBooleanFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("active")))
-                                                                                                           .withColumnFormatters(columnFormatters)
-                                                                                                           .build();
+                .withVisibleProperties(this.treeTable.getVisibleColumns())
+                .withHeaderConfigs(Arrays.asList(new ComponentHeaderConfigurationBuilder().withColumnHeaderKeys(this.treeTable.getColumnHeaders())
+                        .build()))
+                .withColRowFreeze(3)
+                .withIntegerFormattingProperties(new ArrayList<String>(Arrays.asList("counter")))
+                .withFloatFormattingProperties(new ArrayList<String>(Arrays.asList("totalCosts", "differenceToMin")))
+                .withBooleanFormattingProperties(new ArrayList<String>(Arrays.asList("active")))
+                .withColumnFormatters(columnFormatters)
+                .build();
 
         ExportExcelComponentConfiguration componentConfig4 = new ExportExcelComponentConfigurationBuilder().withGrid(this.gridWithIndexedContainer)
-                                                                                                           .withVisibleProperties(this.visibleColumns)
-                                                                                                           .withColumnHeaderKeys(this.columnHeaders)
-                                                                                                           .withIntegerFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("counter")))
-                                                                                                           .withFloatFormattingProperties(new ArrayList<String>(
-                                                                                                                                                  Arrays.asList("totalCosts",
-                                                                                                                                                                "differenceToMin")))
-                                                                                                           .withBooleanFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("active")))
-                                                                                                           .withColumnFormatters(columnFormatters)
-                                                                                                           .build();
+                .withVisibleProperties(this.visibleColumns)
+                .withHeaderConfigs(Arrays.asList(new ComponentHeaderConfigurationBuilder().withColumnHeaderKeys(this.columnHeaders)
+                        .build()))
+                .withIntegerFormattingProperties(new ArrayList<String>(Arrays.asList("counter")))
+                .withFloatFormattingProperties(new ArrayList<String>(Arrays.asList("totalCosts", "differenceToMin")))
+                .withBooleanFormattingProperties(new ArrayList<String>(Arrays.asList("active")))
+                .withColumnFormatters(columnFormatters)
+                .build();
 
         ExportExcelComponentConfiguration componentConfig5 = new ExportExcelComponentConfigurationBuilder().withGrid(this.gridWithBeanItemContainer)
-                                                                                                           .withVisibleProperties(this.visibleColumns)
-                                                                                                           .withColumnHeaderKeys(this.columnHeaders)
-                                                                                                           .withIntegerFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("counter")))
-                                                                                                           .withFloatFormattingProperties(new ArrayList<String>(
-                                                                                                                                                  Arrays.asList("totalCosts",
-                                                                                                                                                                "differenceToMin")))
-                                                                                                           .withBooleanFormattingProperties(new ArrayList<String>(
-                                                                                                                                                    Arrays.asList("active")))
-                                                                                                           .withColumnFormatters(columnFormatters)
-                                                                                                           .build();
+                .withVisibleProperties(this.visibleColumns)
+                .withHeaderConfigs(Arrays.asList(new ComponentHeaderConfigurationBuilder().withColumnHeaderKeys(this.columnHeaders)
+                        .build()))
+                .withIntegerFormattingProperties(new ArrayList<String>(Arrays.asList("counter")))
+                .withFloatFormattingProperties(new ArrayList<String>(Arrays.asList("totalCosts", "differenceToMin")))
+                .withBooleanFormattingProperties(new ArrayList<String>(Arrays.asList("active")))
+                .withColumnFormatters(columnFormatters)
+                .build();
 
         /* Configuring Sheets */
         ArrayList<ExportExcelComponentConfiguration> componentList1 = new ArrayList<ExportExcelComponentConfiguration>();
@@ -317,22 +303,23 @@ public class DemoUI extends UI {
         componentList3.add(componentConfig5);
 
         ExportExcelSheetConfiguration sheetConfig1 = new ExportExcelSheetConfigurationBuilder().withIsDefaultGeneratedByRequired(Boolean.FALSE)
-                                                                                               .withComponentConfigs(componentList1)
-                                                                                               .withIsDefaultSheetTitleRequired(Boolean.FALSE)
-                                                                                               .withIsHeaderSectionRequired(Boolean.FALSE)
-                                                                                               .build();
+                .withComponentConfigs(componentList1)
+                .withIsDefaultSheetTitleRequired(Boolean.FALSE)
+                .withIsHeaderSectionRequired(Boolean.FALSE)
+                .withDateFormat("dd-MMM-yyyy")
+                .build();
 
         ExportExcelSheetConfiguration sheetConfig2 = new ExportExcelSheetConfigurationBuilder().withReportTitle("Exported Tree Table")
-                                                                                               .withSheetName("Excel Tree Table")
-                                                                                               .withComponentConfigs(componentList2)
-                                                                                               .withIsHeaderSectionRequired(Boolean.TRUE)
-                                                                                               .build();
+                .withSheetName("Excel Tree Table")
+                .withComponentConfigs(componentList2)
+                .withIsHeaderSectionRequired(Boolean.TRUE)
+                .build();
 
         ExportExcelSheetConfiguration sheetConfig3 = new ExportExcelSheetConfigurationBuilder().withReportTitle("Exported Grid")
-                                                                                               .withSheetName("Excel Grid")
-                                                                                               .withComponentConfigs(componentList3)
-                                                                                               .withIsHeaderSectionRequired(Boolean.TRUE)
-                                                                                               .build();
+                .withSheetName("Excel Grid")
+                .withComponentConfigs(componentList3)
+                .withIsHeaderSectionRequired(Boolean.TRUE)
+                .build();
 
         /* Configuring Excel */
         ArrayList<ExportExcelSheetConfiguration> sheetList = new ArrayList<ExportExcelSheetConfiguration>();
@@ -340,8 +327,8 @@ public class DemoUI extends UI {
         sheetList.add(sheetConfig2);
         sheetList.add(sheetConfig3);
         ExportExcelConfiguration config1 = new ExportExcelConfigurationBuilder().withGeneratedBy("Kartik Suba")
-                                                                                .withSheetConfigs(sheetList)
-                                                                                .build();
+                .withSheetConfigs(sheetList)
+                .build();
 
         return new ExportToExcelUtility<DataModel>(this.tableWithBeanItemContainer.getUI(), config1, DataModel.class);
     }
@@ -444,7 +431,7 @@ public class DemoUI extends UI {
             Field field;
             try {
                 field = itemId.getClass()
-                              .getDeclaredField(columnId.toString());
+                        .getDeclaredField(columnId.toString());
                 field.setAccessible(true);
 
                 Object obj = field.get(itemId);

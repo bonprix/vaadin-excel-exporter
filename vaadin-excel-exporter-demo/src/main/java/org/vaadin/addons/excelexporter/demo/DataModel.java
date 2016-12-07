@@ -1,4 +1,4 @@
-package org.vaadin.addons.demo;
+package org.vaadin.addons.excelexporter.demo;
 
 /**
  *

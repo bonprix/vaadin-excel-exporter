@@ -1,4 +1,7 @@
-package org.vaadin.addons;
+/*
+ * 
+ */
+package org.vaadin.addons.excelexporter;
 
 import java.awt.Color;
 import java.io.File;
@@ -39,52 +42,89 @@ import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder.BorderSide;
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.util.GeneratedPropertyContainer;
 import com.vaadin.data.util.IndexedContainer;
+import com.vaadin.shared.ui.grid.GridStaticCellType;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
+import com.vaadin.ui.Grid.FooterCell;
+import com.vaadin.ui.Grid.HeaderCell;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 
 /**
- * @author Kartik Suba
+ * The Class ExportToExcelUtility is the core algorithm that generates Excel based on the configurations.
  *
+ * @author Kartik Suba
+ * @param <BEANTYPE> the generic type
  */
 public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
-    /**
-     * 
-     */
-
+    /** The is pre processing performed. */
     Boolean isPreProcessingPerformed = Boolean.FALSE;
 
+    /** The workbook. */
     XSSFWorkbook workbook;
+
+    /** The resultant export file name. */
     String resultantExportFileName = null;
+
+    /** The temp report file. */
     File tempReportFile = null;
+
+    /** The default sheet name. */
     final String DEFAULT_SHEET_NAME = "Sheet";
+
+    /** The default file name. */
     String DEFAULT_FILE_NAME = "Export_";
+
+    /** The source UI. */
     UI sourceUI = null;
 
+    /** The export excel configuration. */
     ExportExcelConfiguration exportExcelConfiguration;
+
+    /** The type class. */
     Class typeClass = null;
 
+    /** The method map. */
     Hashtable<String, Method> methodMap = new Hashtable<String, Method>();
 
+    /** The resultant export type. */
     private ExportType resultantExportType = null;
 
+    /**
+     * Gets the resultant export type.
+     *
+     * @return the resultant export type
+     */
     public ExportType getResultantExportType() {
         return this.resultantExportType;
     }
 
+    /**
+     * Sets the resultant export type.
+     *
+     * @param resultantExportType the new resultant export type
+     */
     public void setResultantExportType(final ExportType resultantExportType) {
         this.resultantExportType = resultantExportType;
     }
 
+    /** The resultant selected extension. */
     private String resultantSelectedExtension;
 
     /************************************** Constructors *********************************************************/
+
     public ExportToExcelUtility() {
     }
 
+    /**
+     * Instantiates a new export to excel utility.
+     *
+     * @param ui the ui
+     * @param exportExcelConfiguration the export excel configuration
+     * @param typeClass the type class
+     */
     public ExportToExcelUtility(final UI ui, final ExportExcelConfiguration exportExcelConfiguration, final Class typeClass) {
 
         this.exportExcelConfiguration = exportExcelConfiguration;
@@ -93,9 +133,15 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         performPreprocessing(exportExcelConfiguration);
     }
 
-    /************************************** Constructors *********************************************************/
+    /************************************* Constructors *********************************************************/
 
     /************************************** Pre-processing and Book-keeping Information *************************/
+
+    /**
+     * This method prepares the initial data for work sheet
+     * 
+     * @param exportExcelConfiguration the export excel configuration
+     */
     protected void performPreprocessing(final ExportExcelConfiguration exportExcelConfiguration) {
 
         getDefaultFileName();
@@ -126,20 +172,26 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             @Override
             public void run() {
 
-                Date d1 = new Date();
                 getAllMethods(ExportToExcelUtility.this.typeClass, ExportToExcelUtility.this.methodMap);
-                Date d2 = new Date();
             }
         });
         thread.start();
     }
 
+    /**
+     * Gets the default file name.
+     *
+     * 
+     */
     public void getDefaultFileName() {
         Calendar calendar = Calendar.getInstance();
         this.DEFAULT_FILE_NAME = this.DEFAULT_FILE_NAME + calendar.get(Calendar.DATE) + "_" + (calendar.get(Calendar.MONTH) + 1) + "_"
                 + calendar.get(Calendar.YEAR) + "__" + calendar.get(Calendar.HOUR) + "_" + calendar.get(Calendar.MINUTE) + "_" + calendar.get(Calendar.SECOND);
     }
 
+    /**
+     * Perform initialization. Creates work sheet and initializes styles
+     */
     protected void performInitialization() {
 
         if (this.resultantExportType.equals(ExportType.XLS)) {
@@ -175,12 +227,21 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             for (ExportExcelComponentConfiguration componentConfig : sheetConfig.getComponentConfigs()) {
                 componentConfig.setrTableHeaderStyle((componentConfig.getTableHeaderStyle() != null) ? componentConfig.getTableHeaderStyle()
                         : getDefaultTableHeaderStyle(this.workbook));
+                componentConfig.setrTableFooterStyle((componentConfig.getTableFooterStyle() != null) ? componentConfig.getTableFooterStyle()
+                        : getDefaultTableFooterStyle(this.workbook));
                 componentConfig.setrTableContentStyle((componentConfig.getTableContentStyle() != null) ? componentConfig.getTableContentStyle()
                         : getDefaultTableContentStyle(this.workbook));
             }
         }
     }
 
+    /**
+     * Adds the report title at first.
+     *
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @return the integer
+     */
     protected Integer addReportTitleAtFirst(final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration) {
 
         if (sheetConfiguration.getReportTitle() != null) {
@@ -205,6 +266,13 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return sheetConfiguration.getDefaultSheetRowNum();
     }
 
+    /**
+     * Adds the generated by at first.
+     *
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @return the integer
+     */
     protected Integer addGeneratedByAtFirst(final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration) {
 
         if (sheetConfiguration.getResultantLoggerInfoRowContent() != null && !sheetConfiguration.getResultantLoggerInfoRowContent()
@@ -233,9 +301,19 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return sheetConfiguration.getDefaultSheetRowNum();
     }
 
-    /************************************** Pre-processing and Book-keeping Information *************************/
+    /************************************* Pre-processing and Book-keeping Information *************************/
 
     /************************************* Adding Vaadin Grid To Sheet *******************************************/
+
+    /**
+     * Adds the Vaadin Grid to the Excel Sheet
+     *
+     * @param grid the grid
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer addVaadinGridToExcelSheet(final Grid grid, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
         Integer stIdx = sheetConfiguration.getDefaultSheetRowNum();
@@ -256,6 +334,15 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return stIdx;
     }
 
+    /**
+     * Creates the grid header section.
+     *
+     * @param sourceTable the source table
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createGridHeaderSection(final Grid sourceTable, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
 
@@ -263,15 +350,34 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
     }
 
+    /**
+     * Creates the grid content.
+     *
+     * @param grid the grid
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createGridContent(final Grid grid, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
+
         return createGenericContent(grid.getContainerDataSource()
                 .getItemIds(), myWorkBook, sheetConfiguration, componentConfiguration);
     }
 
-    /************************************* Adding Vaadin Grid To Sheet *******************************************/
+    /************************************ Adding Vaadin Grid To Sheet *******************************************/
 
     /************************************* Adding Vaadin Table To Sheet *******************************************/
+    /**
+     * Adds the Vaadin Table to the Excel Sheet
+     *
+     * @param grid the grid
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer addTableToExcelSheet(final Table grid, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
         Integer stIdx = sheetConfiguration.getDefaultSheetRowNum();
@@ -292,6 +398,15 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return stIdx;
     }
 
+    /**
+     * Creates the grid header section.
+     *
+     * @param sourceTable the source table
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createGridHeaderSection(final Table sourceTable, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
 
@@ -299,15 +414,34 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
     }
 
+    /**
+     * Creates the grid content.
+     *
+     * @param grid the grid
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createGridContent(final Table grid, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
         return createGenericContent(grid.getContainerDataSource()
                 .getItemIds(), myWorkBook, sheetConfiguration, componentConfiguration);
     }
 
-    /************************************* Adding Vaadin Table To Sheet *******************************************/
+    /************************************ Adding Vaadin Table To Sheet *******************************************/
 
     /************************************ Adding Tree Table To Sheet ***********************************************/
+
+    /**
+     * Adds Tree Table to the Excel Sheet
+     *
+     * @param treeTable the tree table
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer addTreeTableToExcelSheet(final TreeTable treeTable, final XSSFWorkbook myWorkBook,
             final ExportExcelSheetConfiguration sheetConfiguration, final ExportExcelComponentConfiguration componentConfiguration) {
         Integer stIdx = sheetConfiguration.getDefaultSheetRowNum();
@@ -325,9 +459,21 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
         stIdx = createTreeTableContent(treeTable, myWorkBook, sheetConfiguration, componentConfiguration);
 
+        // stIdx = createGenericContent(treeTable.getContainerDataSource()
+        // .getItemIds(), myWorkBook, sheetConfiguration, componentConfiguration);
+
         return stIdx;
     }
 
+    /**
+     * Creates the tree table header section.
+     *
+     * @param treeTable the tree table
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createTreeTableHeaderSection(final TreeTable treeTable, final XSSFWorkbook myWorkBook,
             final ExportExcelSheetConfiguration sheetConfiguration, final ExportExcelComponentConfiguration componentConfiguration) {
 
@@ -335,6 +481,15 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
     }
 
+    /**
+     * Creates the tree table content.
+     *
+     * @param treeTable the tree table
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createTreeTableContent(final TreeTable treeTable, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
 
@@ -348,27 +503,16 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         sheetConfiguration.getSheet()
                 .setRowBreak(sheetConfiguration.getDefaultSheetRowNum());
 
-        Integer firstRow = new Integer(sheetConfiguration.getDefaultSheetRowNum());
-        Row myRow = sheetConfiguration.getSheet()
-                .createRow(sheetConfiguration.getDefaultSheetRowNum());
-
         if (componentConfiguration.getColRowFreeze() != null) {
             sheetConfiguration.getSheet()
-                    .createFreezePane(componentConfiguration.getColRowFreeze(), sheetConfiguration.getDefaultSheetRowNum() + 1);
+                    .createFreezePane(componentConfiguration.getColRowFreeze(), sheetConfiguration.getDefaultSheetRowNum());
         }
 
         // Adding Column Headers
-        for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
-            Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
-            myCell.setCellValue(componentConfiguration.getColumnHeaderKeys()[columns]);
-            sheetConfiguration.getSheet()
-                    .autoSizeColumn(columns, false);
-            myCell.setCellStyle(componentConfiguration.getrTableHeaderStyle());
+        if (componentConfiguration.getHeaderConfigs() != null) {
+            addGenericHeaderRows(sheetConfiguration, componentConfiguration);
         }
 
-        sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
-
-        Date d3 = new Date();
         for (final Object itemId : itemIds) {
 
             addGenericDataRow(componentConfiguration.getVisibleProperties(), myWorkBook, sheetConfiguration, componentConfiguration, itemId,
@@ -376,7 +520,11 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                                       .hasChildren(itemId));
             sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
         }
-        Date d4 = new Date();
+
+        // Adding Configured Footer Rows
+        if (componentConfiguration.getFooterConfigs() != null) {
+            addGenericFooterRows(sheetConfiguration, componentConfiguration);
+        }
 
         // Disabling auto columns for each column
         for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
@@ -385,17 +533,26 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         }
 
         // Adding auto filter in the Excel Header
-        sheetConfiguration.getSheet()
-                .setAutoFilter(new CellRangeAddress(firstRow, sheetConfiguration.getDefaultSheetRowNum(), 0,
-                                       componentConfiguration.getVisibleProperties().length - 1));
+        // sheetConfiguration.getSheet()
+        // .setAutoFilter(new CellRangeAddress(firstRow, sheetConfiguration.getDefaultSheetRowNum(), 0,
+        // componentConfiguration.getVisibleProperties().length - 1));
 
         return sheetConfiguration.getDefaultSheetRowNum();
     }
 
-    /************************************ Adding Tree Table To Sheet ***********************************************/
+    /*********************************** Adding Tree Table To Sheet ***********************************************/
 
     /************************************* Generic Code to add Content and Header Section *******************************************/
-
+    /**
+     * Adds the filter field group section as well as a Name, Value paired additional header section
+     *
+     * @param headerFilterGroup the header filter group
+     * @param visiblePropsInHeader the visible props in header
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createGenericHeaderSection(final FieldGroup headerFilterGroup, final String[] visiblePropsInHeader, final XSSFWorkbook myWorkBook,
             final ExportExcelSheetConfiguration sheetConfiguration, final ExportExcelComponentConfiguration componentConfiguration) {
         if (headerFilterGroup != null && visiblePropsInHeader != null) {
@@ -521,6 +678,15 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return sheetConfiguration.getDefaultSheetRowNum();
     }
 
+    /**
+     * Creates the generic content. Adds the component header, data, and footer sections
+     *
+     * @param itemIds the item ids
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
     protected Integer createGenericContent(final Collection<?> itemIds, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
 
@@ -531,29 +697,25 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         sheetConfiguration.getSheet()
                 .setRowBreak(sheetConfiguration.getDefaultSheetRowNum());
 
-        Integer firstRow = new Integer(sheetConfiguration.getDefaultSheetRowNum());
-        Row myRow = sheetConfiguration.getSheet()
-                .createRow(sheetConfiguration.getDefaultSheetRowNum());
-
         if (componentConfiguration.getColRowFreeze() != null) {
             sheetConfiguration.getSheet()
                     .createFreezePane(componentConfiguration.getColRowFreeze(), sheetConfiguration.getDefaultSheetRowNum());
         }
 
-        // Adding Column Headers
-        for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
-            Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
-            myCell.setCellValue(componentConfiguration.getColumnHeaderKeys()[columns]);
-            sheetConfiguration.getSheet()
-                    .autoSizeColumn(columns, false);
-            myCell.setCellStyle(componentConfiguration.getrTableHeaderStyle());
+        // Adding Configured Header Rows
+        if (componentConfiguration.getHeaderConfigs() != null) {
+            addGenericHeaderRows(sheetConfiguration, componentConfiguration);
         }
 
-        sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
         for (final Object itemId : itemIds) {
             addGenericDataRow(componentConfiguration.getVisibleProperties(), myWorkBook, sheetConfiguration, componentConfiguration, itemId,
                               sheetConfiguration.getDefaultSheetRowNum(), Boolean.FALSE);
             sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
+        }
+
+        // Adding Configured Footer Rows
+        if (componentConfiguration.getFooterConfigs() != null) {
+            addGenericFooterRows(sheetConfiguration, componentConfiguration);
         }
 
         // Disabling auto columns for each column
@@ -563,13 +725,208 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         }
 
         // Adding auto filter in the Excel Header
-        sheetConfiguration.getSheet()
-                .setAutoFilter(new CellRangeAddress(firstRow, sheetConfiguration.getDefaultSheetRowNum(), 0,
-                                       componentConfiguration.getVisibleProperties().length - 1));
+        // sheetConfiguration.getSheet()
+        // .setAutoFilter(new CellRangeAddress(firstRow, sheetConfiguration.getDefaultSheetRowNum(), 0,
+        // componentConfiguration.getVisibleProperties().length - 1));
 
         return sheetConfiguration.getDefaultSheetRowNum();
     }
 
+    /**
+     * Adds the generic header rows as configured in the component configuration
+     *
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
+    protected Integer addGenericHeaderRows(final ExportExcelSheetConfiguration sheetConfiguration,
+            final ExportExcelComponentConfiguration componentConfiguration) {
+
+        for (ComponentHeaderConfiguration headerConfig : componentConfiguration.getHeaderConfigs()) {
+            Row myRow = sheetConfiguration.getSheet()
+                    .createRow(sheetConfiguration.getDefaultSheetRowNum());
+
+            int startMerge = -999;
+            int endMerge = -999;
+            String mergedText = "-";
+            for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
+                Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
+                if (headerConfig.getMergedCells() != null) {
+                    for (MergedCell joinedHeader : headerConfig.getMergedCells()) {
+                        if (joinedHeader.getStartProperty()
+                                .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            startMerge = columns;
+                            mergedText = joinedHeader.getHeaderKey();
+                            myCell.setCellValue(mergedText);
+                            break;
+                        }
+                        else if (joinedHeader.getEndProperty()
+                                .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            endMerge = columns;
+                            sheetConfiguration.getSheet()
+                                    .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(),
+                                                             sheetConfiguration.getDefaultSheetRowNum(), startMerge, endMerge));
+                            break;
+                        }
+                        else {
+
+                            if (headerConfig.getHeaderRow() != null) {
+                                addGenericGridHeaderRow(headerConfig.getHeaderRow()
+                                        .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
+                            }
+                            else if (headerConfig.getColumnHeaderKeys() != null) {
+                                myCell.setCellValue(headerConfig.getColumnHeaderKeys()[columns]);
+                            }
+
+                        }
+                    }
+                    sheetConfiguration.getSheet()
+                            .autoSizeColumn(columns, false);
+                }
+                else {
+                    if (headerConfig.getHeaderRow() != null) {
+                        addGenericGridHeaderRow(headerConfig.getHeaderRow()
+                                .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
+                    }
+                    else if (headerConfig.getColumnHeaderKeys() != null) {
+                        myCell.setCellValue(headerConfig.getColumnHeaderKeys()[columns]);
+                    }
+                }
+                myCell.setCellStyle(componentConfiguration.getrTableHeaderStyle());
+            }
+            sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
+        }
+
+        // Add All the headers
+        return sheetConfiguration.getDefaultSheetRowNum();
+    }
+
+    /**
+     * Adds the generic footer rows as configured in the component configuration
+     *
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @return the integer
+     */
+    protected Integer addGenericFooterRows(final ExportExcelSheetConfiguration sheetConfiguration,
+            final ExportExcelComponentConfiguration componentConfiguration) {
+
+        for (ComponentFooterConfiguration footerConfig : componentConfiguration.getFooterConfigs()) {
+            Row myRow = sheetConfiguration.getSheet()
+                    .createRow(sheetConfiguration.getDefaultSheetRowNum());
+
+            int startMerge = -999;
+            int endMerge = -999;
+            String mergedText = "-";
+            for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
+                Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
+                if (footerConfig.getMergedCells() != null) {
+                    for (MergedCell joinedHeader : footerConfig.getMergedCells()) {
+                        if (joinedHeader.getStartProperty()
+                                .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            startMerge = columns;
+                            mergedText = joinedHeader.getHeaderKey();
+                            myCell.setCellValue(mergedText);
+                            break;
+                        }
+                        else if (joinedHeader.getEndProperty()
+                                .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            endMerge = columns;
+                            sheetConfiguration.getSheet()
+                                    .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(),
+                                                             sheetConfiguration.getDefaultSheetRowNum(), startMerge, endMerge));
+                            break;
+                        }
+                        else {
+
+                            if (footerConfig.getFooterRow() != null) {
+                                addGenericGridFooterRow(footerConfig.getFooterRow()
+                                        .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
+                            }
+                            else if (footerConfig.getColumnFooterKeys() != null) {
+                                myCell.setCellValue(footerConfig.getColumnFooterKeys()[columns]);
+                            }
+
+                        }
+                    }
+                    sheetConfiguration.getSheet()
+                            .autoSizeColumn(columns, false);
+                }
+                else {
+                    if (footerConfig.getFooterRow() != null) {
+                        addGenericGridFooterRow(footerConfig.getFooterRow()
+                                .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
+                    }
+                    else if (footerConfig.getColumnFooterKeys() != null) {
+                        myCell.setCellValue(footerConfig.getColumnFooterKeys()[columns]);
+                    }
+                }
+                myCell.setCellStyle(componentConfiguration.getrTableFooterStyle());
+            }
+            sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
+        }
+
+        // Add All the headers
+        return sheetConfiguration.getDefaultSheetRowNum();
+    }
+
+    /**
+     * Adds the generic grid header row configured in the header configs
+     *
+     * @param gridHeaderCell the grid header cell
+     * @param myCell the my cell
+     */
+    private void addGenericGridHeaderRow(final HeaderCell gridHeaderCell, final Cell myCell) {
+
+        if (gridHeaderCell.getCellType()
+                .equals(GridStaticCellType.TEXT)) {
+            myCell.setCellValue(gridHeaderCell.getText());
+        }
+        else if (gridHeaderCell.getCellType()
+                .equals(GridStaticCellType.HTML)) {
+            myCell.setCellValue(gridHeaderCell.getHtml());
+        }
+        else if (gridHeaderCell.getCellType()
+                .equals(GridStaticCellType.WIDGET)) {
+            myCell.setCellValue(gridHeaderCell.getComponent()
+                    .toString());
+        }
+    }
+
+    /**
+     * Adds the generic grid footer row configured in the footer configs
+     *
+     * @param gridHeaderCell the grid header cell
+     * @param myCell the my cell
+     */
+    private void addGenericGridFooterRow(final FooterCell gridHeaderCell, final Cell myCell) {
+
+        if (gridHeaderCell.getCellType()
+                .equals(GridStaticCellType.TEXT)) {
+            myCell.setCellValue(gridHeaderCell.getText());
+        }
+        else if (gridHeaderCell.getCellType()
+                .equals(GridStaticCellType.HTML)) {
+            myCell.setCellValue(gridHeaderCell.getHtml());
+        }
+        else if (gridHeaderCell.getCellType()
+                .equals(GridStaticCellType.WIDGET)) {
+            myCell.setCellValue(gridHeaderCell.getComponent()
+                    .toString());
+        }
+    }
+
+    /**
+     * Adds the generic data row. Applies formatting to the cells as configured.
+     *
+     * @param visibleColumns the visible columns
+     * @param myWorkBook the my work book
+     * @param sheetConfiguration the sheet configuration
+     * @param componentConfiguration the component configuration
+     * @param itemId the item id
+     * @param localRow the local row
+     * @param isParent the is parent
+     */
     protected void addGenericDataRow(final Object[] visibleColumns, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration, final Object itemId, final Integer localRow, final Boolean isParent) {
         Row myRow = sheetConfiguration.getSheet()
@@ -597,10 +954,6 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                                 // other than a Component or a String
                                 obj = obj.toString();
                             }
-                            /*
-                             * else if (obj instanceof Component) { obj = componentConfiguration.getTable() .getItem(itemId)
-                             * .getItemProperty(visibleColumns[columns]) .getValue(); }
-                             */
                         }
                         catch (Exception e) {
                         }
@@ -618,8 +971,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         .getContainerDataSource() instanceof GeneratedPropertyContainer) {
                     if (((GeneratedPropertyContainer) componentConfiguration.getGrid()
                             .getContainerDataSource()).getWrappedContainer() != null) {
-                        obj = componentConfiguration.getGrid()
-                                .getContainerDataSource()
+                        obj = ((GeneratedPropertyContainer) componentConfiguration.getGrid()
+                                .getContainerDataSource()).getWrappedContainer()
                                 .getContainerProperty(itemId, visibleColumns[columns])
                                 .getValue();
                     }
@@ -690,6 +1043,16 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         }
     }
 
+    /**
+     * Apply column formatter.
+     *
+     * @param visibleColumns the visible columns
+     * @param componentConfiguration the component configuration
+     * @param itemId the item id
+     * @param columns the columns
+     * @param obj the obj
+     * @return the string
+     */
     private String applyColumnFormatter(final Object[] visibleColumns, final ExportExcelComponentConfiguration componentConfiguration, final Object itemId,
             final int columns, final Object obj) {
         String formatted = null;
@@ -704,6 +1067,13 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return formatted;
     }
 
+    /**
+     * Gets the all methods. Creates a cache of method names from the bound BEANTYPE
+     *
+     * @param type the type
+     * @param map the map
+     * 
+     */
     public void getAllMethods(Class type, final Hashtable<String, Method> map) {
 
         while (type != Object.class) {
@@ -739,6 +1109,14 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
     }
 
+    /**
+     * Gets the all fields of the bound BEANTYPE
+     *
+     * @param fields the fields
+     * @param type the type
+     * @param map the map
+     * @return the all fields
+     */
     public List<Field> getAllFields(List<Field> fields, final Class<?> type, final Map<String, Field> map) {
         fields.addAll(Arrays.asList(type.getDeclaredFields()));
 
@@ -752,10 +1130,14 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return fields;
     }
 
-    /************************************* Generic Code to add Content and Header Section *******************************************/
+    /************************************ Generic Code to add Content and Header Section *******************************************/
 
     /************************************* Using above methods to add data in to Excel *******************************************/
-
+    /**
+     * Adds configured sheets and components within
+     *
+     * @return the boolean
+     */
     protected Boolean addConfiguredComponentToExcel() {
 
         if (this.isPreProcessingPerformed) {
@@ -790,6 +1172,11 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return this.isPreProcessingPerformed;
     }
 
+    /**
+     * Generate report file.
+     *
+     * @return the file
+     */
     @Override
     protected File generateReportFile() {
 
@@ -841,37 +1228,81 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return success;
     }
 
-    /************************************* Using above methods to add data in to Excel *******************************************/
+    /************************************ Using above methods to add data in to Excel *******************************************/
 
     /************************************* Getters and Setters *******************************************/
+    /**
+     * Gets the bound Vaadin UI
+     *
+     * @return the source UI
+     */
     public UI getSourceUI() {
         return this.sourceUI;
     }
 
+    /**
+     * Sets the source UI.
+     *
+     * @param sourceUI the new source UI
+     */
     public void setSourceUI(final UI sourceUI) {
         this.sourceUI = sourceUI;
     }
 
+    /**
+     * Gets the workbook.
+     *
+     * @return the workbook
+     */
     public XSSFWorkbook getWorkbook() {
         return this.workbook;
     }
 
+    /**
+     * Gets the checks if is pre processing performed.
+     *
+     * @return the checks if is pre processing performed
+     */
     public Boolean getIsPreProcessingPerformed() {
         return this.isPreProcessingPerformed;
     }
 
+    /**
+     * Sets the checks if is pre processing performed.
+     *
+     * @param isPreProcessingPerformed the new checks if is pre processing performed
+     */
     public void setIsPreProcessingPerformed(final Boolean isPreProcessingPerformed) {
         this.isPreProcessingPerformed = isPreProcessingPerformed;
     }
 
+    /**
+     * Gets the export excel configuration.
+     *
+     * @return the export excel configuration
+     */
     public ExportExcelConfiguration getExportExcelConfiguration() {
         return this.exportExcelConfiguration;
     }
 
+    /**
+     * Sets the export excel configuration.
+     *
+     * @param exportExcelConfiguration the new export excel configuration
+     */
     public void setExportExcelConfiguration(final ExportExcelConfiguration exportExcelConfiguration) {
         this.exportExcelConfiguration = exportExcelConfiguration;
     }
 
+    /************************************ Getters and Setters *******************************************/
+
+    /************************************* Styles and Designing of Excel Content *******************************************/
+    /**
+     * Creates the styles.
+     *
+     * @param wb the wb
+     * @return the map
+     */
     protected Map<String, XSSFCellStyle> createStyles(final XSSFWorkbook wb) {
         Map<String, XSSFCellStyle> styles = new HashMap<String, XSSFCellStyle>();
         XSSFDataFormat fmt = wb.createDataFormat();
@@ -919,9 +1350,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return styles;
     }
 
-    /************************************* Getters and Setters *******************************************/
-
-    /************************************* Styles and Designing of Excel Content *******************************************/
+    /**
+     * Gets Default Report Title Style
+     *
+     * @param myWorkBook the my work book
+     * @return the default report title style
+     */
     protected XSSFCellStyle getDefaultReportTitleStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle defaultReportTitleStyle = myWorkBook.createCellStyle();
 
@@ -934,6 +1368,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return defaultReportTitleStyle;
     }
 
+    /**
+     * Gets the default generated by style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default generated by style
+     */
     protected XSSFCellStyle getDefaultGeneratedByStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle defaultGeneratedByStyle = myWorkBook.createCellStyle();
         XSSFFont boldFont = myWorkBook.createFont();
@@ -945,12 +1385,18 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return defaultGeneratedByStyle;
     }
 
+    /**
+     * Gets the default header caption style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default header caption style
+     */
     protected XSSFCellStyle getDefaultHeaderCaptionStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle.setFillForegroundColor(new XSSFColor(new Color(50, 86, 110)));
         headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
-        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.BLACK);
 
         XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -961,13 +1407,19 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return headerCellStyle;
     }
 
+    /**
+     * Gets the default header value style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default header value style
+     */
     protected XSSFCellStyle getDefaultHeaderValueStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle.setFillForegroundColor(new XSSFColor(new Color(209, 220, 227)));
         headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
         headerCellStyle.setAlignment(CellStyle.ALIGN_CENTER);
-        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.BLACK);
 
         XSSFFont boldFont = myWorkBook.createFont();
 
@@ -976,12 +1428,18 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return headerCellStyle;
     }
 
+    /**
+     * Gets the default add header caption style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default add header caption style
+     */
     protected XSSFCellStyle getDefaultAddHeaderCaptionStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle.setFillForegroundColor(new XSSFColor(new Color(50, 86, 110)));
         headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
-        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE);
+        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.BLACK);
 
         XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
@@ -992,6 +1450,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return headerCellStyle;
     }
 
+    /**
+     * Gets the default add header value style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default add header value style
+     */
     protected XSSFCellStyle getDefaultAddHeaderValueStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle = myWorkBook.createCellStyle();
@@ -1007,12 +1471,19 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return headerCellStyle;
     }
 
+    /**
+     * Gets the default table header style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default table header style
+     */
     protected XSSFCellStyle getDefaultTableHeaderStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle = myWorkBook.createCellStyle();
         headerCellStyle.setFillForegroundColor(new XSSFColor(new Color(50, 86, 110)));
         headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
         headerCellStyle.setAlignment(CellStyle.ALIGN_LEFT);
+        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.WHITE);
 
         XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setColor(IndexedColors.WHITE.getIndex());
@@ -1023,6 +1494,35 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return headerCellStyle;
     }
 
+    /**
+     * Gets the default table footer style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default table footer style
+     */
+    protected XSSFCellStyle getDefaultTableFooterStyle(final XSSFWorkbook myWorkBook) {
+        XSSFCellStyle headerCellStyle = myWorkBook.createCellStyle();
+        headerCellStyle = myWorkBook.createCellStyle();
+        headerCellStyle.setFillForegroundColor(new XSSFColor(new Color(50, 86, 110)));
+        headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
+        headerCellStyle.setAlignment(CellStyle.ALIGN_LEFT);
+        headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.WHITE);
+
+        XSSFFont boldFont = myWorkBook.createFont();
+        boldFont.setColor(IndexedColors.WHITE.getIndex());
+        boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
+
+        headerCellStyle.setFont(boldFont);
+
+        return headerCellStyle;
+    }
+
+    /**
+     * Gets the default table content style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default table content style
+     */
     protected XSSFCellStyle getDefaultTableContentStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle cellStyle = myWorkBook.createCellStyle();
         cellStyle = myWorkBook.createCellStyle();
@@ -1032,6 +1532,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return cellStyle;
     }
 
+    /**
+     * Gets the default table content parent style.
+     *
+     * @param myWorkBook the my work book
+     * @return the default table content parent style
+     */
     protected XSSFCellStyle getDefaultTableContentParentStyle(final XSSFWorkbook myWorkBook) {
         XSSFCellStyle cellStyle = myWorkBook.createCellStyle();
         cellStyle = myWorkBook.createCellStyle();
@@ -1044,32 +1550,51 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return cellStyle;
     }
 
-    protected XSSFCellStyle setBorders(final XSSFCellStyle headerCellStyle, final Boolean left, final Boolean right, final Boolean top, final Boolean bottom) {
+    /**
+     * Sets the borders.
+     *
+     * @param headerCellStyle the header cell style
+     * @param left the left
+     * @param right the right
+     * @param top the top
+     * @param bottom the bottom
+     * @param color the color
+     * @return the XSSF cell style
+     */
+    protected XSSFCellStyle setBorders(final XSSFCellStyle headerCellStyle, final Boolean left, final Boolean right, final Boolean top, final Boolean bottom,
+            final Color color) {
         if (bottom) {
             headerCellStyle.setBorderBottom(BorderStyle.THIN);
-            headerCellStyle.setBorderColor(BorderSide.BOTTOM, new XSSFColor(Color.BLACK));
+            headerCellStyle.setBorderColor(BorderSide.BOTTOM, new XSSFColor(color));
         }
 
         if (top) {
             headerCellStyle.setBorderTop(BorderStyle.THIN);
-            headerCellStyle.setBorderColor(BorderSide.TOP, new XSSFColor(Color.BLACK));
+            headerCellStyle.setBorderColor(BorderSide.TOP, new XSSFColor(color));
         }
 
         if (left) {
             headerCellStyle.setBorderLeft(BorderStyle.THIN);
-            headerCellStyle.setBorderColor(BorderSide.LEFT, new XSSFColor(Color.BLACK));
+            headerCellStyle.setBorderColor(BorderSide.LEFT, new XSSFColor(color));
         }
 
         if (right) {
             headerCellStyle.setBorderRight(BorderStyle.THIN);
-            headerCellStyle.setBorderColor(BorderSide.RIGHT, new XSSFColor(Color.BLACK));
+            headerCellStyle.setBorderColor(BorderSide.RIGHT, new XSSFColor(color));
         }
 
         return headerCellStyle;
     }
 
-    /************************************* Styles and Designing of Excel Content *******************************************/
+    /************************************ Styles and Designing of Excel Content *******************************************/
 
+    /**
+     * Formats Date based on the UI's locale
+     *
+     * @param val the val
+     * @param sheetConfiguration the sheet configuration
+     * @return the string
+     */
     private String formatDate(final Date val, final ExportExcelSheetConfiguration sheetConfiguration) {
         if (val == null) {
             return null;
@@ -1078,6 +1603,13 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return df.format(val);
     }
 
+    /**
+     * Localized format for Integer and BigDecimal values
+     *
+     * @param value the value
+     * @param isIntOrBigD the is int or big D
+     * @return the string
+     */
     public String localizedFormat(final String value, final Boolean isIntOrBigD) {
         Locale loc = this.sourceUI.getLocale();
         if (isIntOrBigD) {
@@ -1097,6 +1629,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
     }
 
+    /**
+     * Format float.
+     *
+     * @param value the value
+     * @return the string
+     */
     public String formatFloat(final Double value) {
         Locale loc = this.sourceUI.getLocale();
         NumberFormat nf = NumberFormat.getNumberInstance(loc);
@@ -1105,6 +1643,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return nf.format(value);
     }
 
+    /**
+     * Un localized format for int.
+     *
+     * @param value the value
+     * @return the integer
+     */
     public Integer unLocalizedFormatForInt(final String value) {
         Locale loc = this.sourceUI.getLocale();
         Integer modifiedValue = 0;
@@ -1125,6 +1669,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         return modifiedValue;
     }
 
+    /**
+     * Un localized format for big decimal.
+     *
+     * @param value the value
+     * @return the big decimal
+     */
     public BigDecimal unLocalizedFormatForBigDecimal(final String value) {
         Locale loc = UI.getCurrent()
                 .getLocale();

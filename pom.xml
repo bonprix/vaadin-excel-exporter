@@ -4,7 +4,7 @@
 	<groupId>org.vaadin.addons</groupId>
 	<artifactId>vaadin-excel-exporter-root</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.3-SNAPSHOT</version>
+	<version>1.0.4</version>
 	<name>Excel Exporter</name>
 
 	<modules>
@@ -32,7 +32,7 @@
 		<url>git://github.com/bonprix/vaadin-excel-exporter.git</url>
 		<connection>scm:git:git://github.com/bonprix/vaadin-excel-exporter.git</connection>
 		<developerConnection>scm:git:https://github.com/bonprix/vaadin-excel-exporter.git</developerConnection>
-	  	<tag>vaadin-excel-exporter-root-1.0.0-SNAPSHOT</tag>
+	  	<tag>vaadin-excel-exporter-root-1.0.4</tag>
   	</scm>
 
 	<profiles>

@@ -1,4 +1,7 @@
-package org.vaadin.addons;
+/*
+ * 
+ */
+package org.vaadin.addons.excelexporter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +11,7 @@ import com.vaadin.server.DownloadStream;
 import com.vaadin.server.StreamResource;
 import com.vaadin.ui.UI;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class TemporaryFileDownloadResource.
  * 
@@ -43,6 +47,11 @@ public class TemporaryFileDownloadResource extends StreamResource {
         this.contentType = contentType;
     }
 
+    /**
+     * Gets the stream.
+     *
+     * @return the stream
+     */
     /*
      * (non-Javadoc)
      * @see com.vaadin.terminal.StreamResource#getStream()
@@ -82,6 +91,11 @@ public class TemporaryFileDownloadResource extends StreamResource {
             this.inputStream = new DeletingFileInputStream(fileToDownload);
         }
 
+        /**
+         * Gets the stream.
+         *
+         * @return the stream
+         */
         /*
          * (non-Javadoc)
          * @see com.vaadin.terminal.StreamResource.StreamSource#getStream()
