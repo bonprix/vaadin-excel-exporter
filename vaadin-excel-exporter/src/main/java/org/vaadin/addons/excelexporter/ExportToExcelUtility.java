@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -1099,7 +1100,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         }
                     }
                     catch (NoSuchMethodException | SecurityException e) {
-                        e.printStackTrace();
+                        LOGGER.log(Level.FINER, e.getMessage());
                     }
 
                 }
