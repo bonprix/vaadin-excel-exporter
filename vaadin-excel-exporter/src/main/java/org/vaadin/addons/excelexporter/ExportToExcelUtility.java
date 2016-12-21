@@ -1088,20 +1088,27 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                             .toUpperCase()
                             .concat(field.getName()
                                     .substring(1));
-                    Method method;
+                    Method method=null;
                     try {
                         method = type.getMethod("get" + name);
-                        if (method == null) {
-                            method = type.getMethod("is" + name);
-                        }
-                        if (method != null) {
-                            map.put(field.getName(), method);
-                        }
                     }
                     catch (NoSuchMethodException | SecurityException e) {
-                        e.printStackTrace();
+                        
                     }
-
+                    if (method == null) {
+                    try {
+                        method = type.getMethod("is" + name);
+                    }
+                    catch (NoSuchMethodException | SecurityException e) {
+                        
+                    }
+                    if (method != null) {
+                        map.put(field.getName(), method);
+                    } else {
+                        //TODO: Errorhandling
+                        new NoSuchMethodException(
+							type.getCanonicalName() + ".get" + name + " or " + type.getCanonicalName() + ".is" + name + " not found!").printStackTrace();
+                    }
                 }
             }
             type = type.getSuperclass();
