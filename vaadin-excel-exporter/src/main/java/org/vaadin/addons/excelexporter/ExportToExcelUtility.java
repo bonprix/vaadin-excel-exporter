@@ -1088,7 +1088,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                             .toUpperCase()
                             .concat(field.getName()
                                     .substring(1));
-                    Method method;
+                    Method method=null;
                     try {
                         method = type.getMethod("get" + name);
                     }
