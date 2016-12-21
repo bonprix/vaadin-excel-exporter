@@ -1106,6 +1106,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         map.put(field.getName(), method);
                     } else {
                         //TODO: Errorhandling
+                        new NoSuchMethodException(
+							type.getCanonicalName() + ".get" + name + " or " + type.getCanonicalName() + ".is" + name + " not found!").printStackTrace();
                     }
                 }
             }
