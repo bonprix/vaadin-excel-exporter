@@ -161,12 +161,22 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 
 - Updated the Demo Project to showcase the same. Also you can refer to the advance snipped section for example.
 
+### Version 1.0.5
+
+- Added support for nested properties in case of BeanItemContainer.
+
+- Resolved issues raised in git
+- https://github.com/bonprix/vaadin-excel-exporter/issues/3
+- https://github.com/bonprix/vaadin-excel-exporter/issues/9
+- https://github.com/bonprix/vaadin-excel-exporter/pull/16
+
 ## Roadmap
 
 Recently Released :
 - Reflecting some column generator logic as well in the Excel. For Example suffixes cm, kg, $ etc...
 
 Upcoming releases:
+- Specifying Excel Column types as Date, Number sustaining their formatting
 - Specifying a row header which can allow horizontal data as well.
 - Export of selected records wherever applicable
 - Legend for better understanding
