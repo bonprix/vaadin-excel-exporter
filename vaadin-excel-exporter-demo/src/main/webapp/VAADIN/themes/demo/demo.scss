@@ -1,0 +1,21 @@
+// Defines the plaintext font size, weight and family. Font size affects general component sizing.
+$v-font-size: 14px;
+$v-font-family: Arial, Helvetica, sans-serif;
+$v-unit-size: 28px;
+$v-line-height: 1.6;
+$v-font-color: #6E6E6E;
+$v-selection-color: #2D6998;
+
+// Defines the border used by all components.
+$v-border-radius: 0px;
+
+// Affects the color of some component elements, e.g Button, Panel title, etc
+$v-background-color: hsl(210, 0%, 93%);
+// Affects the color of content areas, e.g  Panel and Window content, TextField input etc
+$v-app-background-color: $v-background-color;
+
+@import "../valo/valo.scss";
+
+@mixin demo {
+    @include valo;
+}
