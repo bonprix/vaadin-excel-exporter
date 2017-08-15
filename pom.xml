@@ -1,61 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.vaadin.addons</groupId>
-	<artifactId>vaadin-excel-exporter-root</artifactId>
-	<packaging>pom</packaging>
-	<version>1.0.6-SNAPSHOT</version>
-	<name>Excel Exporter</name>
+<project
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
 
-	<modules>
-		<module>vaadin-excel-exporter</module>
-		<module>vaadin-excel-exporter-demo</module>
-	</modules>
-	
-	<developers>
-		<developer>
-			<name>Kartik Suba</name>
-			<email>k.suba@direction.biz or kartiksuba.creations@gmail.com</email>
-			<organization>Direction Software Solutions</organization>
-			<url>http://www.direction.biz</url>
-		</developer>
-	</developers>
+    <groupId>org.vaadin.addons</groupId>
+    <artifactId>vaadin-excel-exporter-root</artifactId>
+    <version>1.0.6-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-	<licenses>
-		<license>
-			<name>The MIT License (MIT)</name>
-			<url>http://opensource.org/licenses/MIT</url>
-		</license>
-	</licenses>
+    <name>Excel Exporter</name>
 
-	<scm>
-		<url>git://github.com/bonprix/vaadin-excel-exporter.git</url>
-		<connection>scm:git:git://github.com/bonprix/vaadin-excel-exporter.git</connection>
-		<developerConnection>scm:git:https://github.com/bonprix/vaadin-excel-exporter.git</developerConnection>
-	  	<tag>vaadin-excel-exporter-root-1.0.4</tag>
-  	</scm>
+    <modules>
+        <module>vaadin-excel-exporter</module>
+        <module>vaadin-excel-exporter-demo</module>
+    </modules>
 
-	<profiles>
-		<profile>
-			<!-- Vaadin pre-release repositories -->
-			<id>vaadin-prerelease</id>
-			<activation>
-				<activeByDefault>false</activeByDefault>
-			</activation>
-			
-			<repositories>
-				<repository>
-					<id>vaadin-prereleases</id>
-					<url>http://maven.vaadin.com/vaadin-prereleases</url>
-				</repository>
-			</repositories>
-			<pluginRepositories>
-				<pluginRepository>
-					<id>vaadin-prereleases</id>
-					<url>http://maven.vaadin.com/vaadin-prereleases</url>
-				</pluginRepository>
-			</pluginRepositories>
-		</profile>
-	</profiles>
+    <developers>
+        <developer>
+            <name>Kartik Suba</name>
+            <email>k.suba@direction.biz or kartiksuba.creations@gmail.com</email>
+            <organization>Direction Software Solutions</organization>
+            <url>http://www.direction.biz</url>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>The MIT License (MIT)</name>
+            <url>http://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>git://github.com/bonprix/vaadin-excel-exporter.git</url>
+        <connection>scm:git:git://github.com/bonprix/vaadin-excel-exporter.git</connection>
+        <developerConnection>scm:git:https://github.com/bonprix/vaadin-excel-exporter.git</developerConnection>
+          <tag>vaadin-excel-exporter-root-1.0.4</tag>
+      </scm>
+
+    <profiles>
+        <profile>
+            <!-- Vaadin pre-release repositories -->
+            <id>vaadin-prerelease</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            
+            <repositories>
+                <repository>
+                    <id>vaadin-prereleases</id>
+                    <url>http://maven.vaadin.com/vaadin-prereleases</url>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>vaadin-prereleases</id>
+                    <url>http://maven.vaadin.com/vaadin-prereleases</url>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
 
 </project>
