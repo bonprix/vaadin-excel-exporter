@@ -207,17 +207,9 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         else {
             this.resultantSelectedExtension = "xlsx";
         }
-        Calendar calendar = Calendar.getInstance();
         this.resultantExportFileName = ((this.exportExcelConfiguration.getExportFileName() != null && !this.exportExcelConfiguration.getExportFileName()
                                                                                                                                     .isEmpty())
                                                                                                                                             ? this.exportExcelConfiguration.getExportFileName()
-                                                                                                                                                    + "_"
-                                                                                                                                                    + calendar.get(Calendar.YEAR)
-                                                                                                                                                    + "_"
-                                                                                                                                                    + (calendar.get(Calendar.MONTH)
-                                                                                                                                                            + 1)
-                                                                                                                                                    + "_"
-                                                                                                                                                    + calendar.get(Calendar.DATE)
                                                                                                                                             : this.DEFAULT_FILE_NAME)
                 + "." + this.resultantSelectedExtension;
 
