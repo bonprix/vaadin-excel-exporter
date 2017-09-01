@@ -1,7 +1,7 @@
 /*
  * 
  */
-package org.vaadin.addons.excelexporter;
+package org.vaadin.addons.excelexporter.stream;
 
 import java.io.File;
 import java.io.FileInputStream;
