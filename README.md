@@ -19,7 +19,6 @@ JDK 1.8 or above
 POI 3.9
 POI-OOXML 3.9
 Apache Commons IO library (http://commons.apache.org/io/) v2.2
-net.karneim.pojobuilder 3.4.0 and above
 
 ## Features
 
@@ -118,6 +117,57 @@ Choose File > Import... > Existing Maven Projects
 
 Note that Eclipse may give "Plugin execution not covered by lifecycle configuration" errors for pom.xml. Use "Permanently mark goal resources in pom.xml as ignored in Eclipse build" quick-fix to mark these errors as permanently ignored in your project. Do not worry, the project still works fine. 
 
+# Developer Guide
+
+## Getting started
+
+Here is a simple example on how to try out the add-on component:
+
+```java
+/* Configuring Components */
+ExportExcelComponentConfiguration<DataModel> componentConfig1
+	= new ExportExcelComponentConfigurationBuilder<DataModel>()
+		.withGrid(this.gridDefault)
+		.withVisibleProperties(this.visibleColumns)
+		.withHeaderConfigs(Arrays.asList(
+								new ComponentHeaderConfigurationBuilder()
+									.withAutoFilter(true)
+									.withColumnKeys(this.columnHeaders)
+									.build()
+										)
+						   )
+		.withIntegerFormattingProperties(Arrays.asList("counter"))
+		.withFloatFormattingProperties(Arrays.asList(
+											"totalCosts",
+											"differenceToMin")
+									   )
+		.withBooleanFormattingProperties(Arrays.asList("active"))
+		.withColumnFormatters(columnFormatters)
+		.build();
+			
+/* Configuring Sheets */
+ExportExcelSheetConfiguration<DataModel> sheetConfig1
+	= new ExportExcelSheetConfigurationBuilder<DataModel>()
+		.withReportTitle("Grid (Default)")
+		.withSheetName("Grid (default)")
+		.withComponentConfigs(Arrays.asList(componentConfig1))
+		.withIsHeaderSectionRequired(Boolean.TRUE)
+		.withDateFormat("dd-MMM-yyyy")
+		.build();
+                                             
+/* Configuring Excel */
+ExportExcelConfiguration<DataModel> config1
+	= new ExportExcelConfigurationBuilder<DataModel>()
+		.withGeneratedBy("Kartik Suba")
+		.withSheetConfigs(Arrays.asList(sheetConfig1))
+		.build();
+		
+/* execute the export */
+config1.export();
+```
+
+For a more comprehensive example, see src/test/java/org/vaadin/template/demo/DemoUI.java
+
 ### Debugging server-side
 
 If you have not already compiled the widgetset, do it now by running vaadin:install Maven target for vaadin-excel-exporter-root project.
@@ -135,22 +185,22 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
  
 ## Release notes
 
+### Version 2.0
 
-### Version 1.0.1
-- Initial release
+- migrated it to Vaadin 8
+-- removed all kind of tables
+- improved some functionality like auto filter, cell style generators are now more specific and more
+- refactored all of the code
+-- removed all reflection
 
-### Version 1.0.2
-- Added Getters for extension
+### Version 1.0.5
 
-### Version 1.0.3
-- Added Column Formatter Logic
+- Added support for nested properties in case of BeanItemContainer.
 
-- Also developed three formatters as built in formatters namely
-- SuffixColumnFormatter(String suffix) // can add suffix to the container/model value such as $, %, kg etc...
-- PrefixColumnFormatter(String prefix // can add prefix to the container/model value 
-- BooleanColumnFormatter(String trueValue, String falseValue) // Give meaningful alias to true and false like Yes/No, Active/De-Active etc.. Requires the column to be also set withBooleanFormattingProperties
-
-- Note: For columns mentioned in withFloatFormattingProperties and withIntegerFormattingProperties, the above formatting gets applied after the Integer and Float formatting is performed on the container/model value.
+- Resolved issues raised in git
+- https://github.com/bonprix/vaadin-excel-exporter/issues/3
+- https://github.com/bonprix/vaadin-excel-exporter/issues/9
+- https://github.com/bonprix/vaadin-excel-exporter/pull/16
 
 - Updated the Demo Project to show case the same.
 
@@ -167,22 +217,21 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 
 - Updated the Demo Project to showcase the same. Also you can refer to the advance snipped section for example.
 
-### Version 1.0.5
+### Version 1.0.3
+- Added Column Formatter Logic
 
-- Added support for nested properties in case of BeanItemContainer.
+- Also developed three formatters as built in formatters namely
+- SuffixColumnFormatter(String suffix) // can add suffix to the container/model value such as $, %, kg etc...
+- PrefixColumnFormatter(String prefix // can add prefix to the container/model value 
+- BooleanColumnFormatter(String trueValue, String falseValue) // Give meaningful alias to true and false like Yes/No, Active/De-Active etc.. Requires the column to be also set withBooleanFormattingProperties
 
-- Resolved issues raised in git
-- https://github.com/bonprix/vaadin-excel-exporter/issues/3
-- https://github.com/bonprix/vaadin-excel-exporter/issues/9
-- https://github.com/bonprix/vaadin-excel-exporter/pull/16
+- Note: For columns mentioned in withFloatFormattingProperties and withIntegerFormattingProperties, the above formatting gets applied after the Integer and Float formatting is performed on the container/model value.
 
-### Version 2.0
+### Version 1.0.2
+- Added Getters for extension
 
-- migrated it to Vaadin 8
--- removed all kind of tables
-- improved some functionality like auto filter, cell style generators are now more specific and more
-- refactored all of the code
--- removed all reflection
+### Version 1.0.1
+- Initial release
 
 ## Roadmap
 
@@ -215,39 +264,3 @@ Add-on is distributed under Apache License 2.0. For license terms, see LICENSE.t
 
 vaadin-excel-exporter is written by Kartik Suba @ Direction Software Solutions, India.
 For Client: Bonprix Handelsgesellschaft mbH
-
-# Developer Guide
-
-## Getting started
-
-Here is a simple example on how to try out the add-on component:
-
-```java
-/* Configuring Components */
-ExportExcelComponentConfiguration componentConfig1 = new ExportExcelComponentConfigurationBuilder().withTable(this.tableWithBeanItemContainer) //Your Table or component goes here
-                                                                                                           .withVisibleProperties(this.tableWithBeanItemContainer.getVisibleColumns())
-                                                                                                           .withColumnHeaderKeys(this.tableWithBeanItemContainer.getColumnHeaders()) 
-                                                                                                           .build();
-/* Configuring Sheets */
-ArrayList<ExportExcelComponentConfiguration> componentList1 = new ArrayList<ExportExcelComponentConfiguration>();
-componentList1.add(componentConfig1);
-
-ExportExcelSheetConfiguration sheetConfig1 = new ExportExcelSheetConfigurationBuilder().withReportTitle("Excel Report")
-                                                                                               .withSheetName("Excel Report")
-                                                                                               .withComponentConfigs(componentList1)
-                                                                                               .withIsHeaderSectionRequired(Boolean.TRUE)
-                                                                                               .build();
-                                             
-/* Configuring Excel */
-ArrayList<ExportExcelSheetConfiguration> sheetList = new ArrayList<ExportExcelSheetConfiguration>();
-sheetList.add(sheetConfig1);
-
-ExportExcelConfiguration config1 = new ExportExcelConfigurationBuilder().withGeneratedBy("Kartik Suba")
-                                                                                .withSheetConfigs(sheetList)
-                                                                                .build();
-
-ExportToExcelUtility<DataModel> exportToExcelUtility = new ExportToExcelUtility<DataModel>(ExportType.XLSX, config1);
-exportToExcelUtility.export();
-```
-
-For a more comprehensive example, see src/test/java/org/vaadin/template/demo/DemoUI.java
