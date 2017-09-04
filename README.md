@@ -1,7 +1,11 @@
 # vaadin-excel-exporter for Vaadin 8
 
-vaadin-excel-exporter is a utility add-on for Vaadin 8. It is a single point solution providing consistent and configurable support for 
-exporting data of Vaadin Table, Tree Table and Grid in Excel format.
+vaadin-excel-exporter is a utility add-on for Vaadin 8.
+It is a single point solution providing consistent
+and configurable support for 
+exporting data of Vaadin in Excel format.
+
+Grid only works with ListDataProvider, open for pullrequest ideas for other Providers.
 
 ## Why do we need this addon?
 
