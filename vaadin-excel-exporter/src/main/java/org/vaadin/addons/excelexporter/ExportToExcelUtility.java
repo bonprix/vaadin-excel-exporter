@@ -981,38 +981,16 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                     }
 
                 }
-                else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof IndexedContainer) {
+                else if (componentConfiguration.getGrid() != null) {
                     obj = componentConfiguration.getGrid()
                                                 .getContainerDataSource()
                                                 .getContainerProperty(itemId, visibleColumns[columns])
                                                 .getValue();
-                }
-                else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof GeneratedPropertyContainer) {
-                    if (((GeneratedPropertyContainer) componentConfiguration.getGrid()
-                                                                            .getContainerDataSource()).getWrappedContainer() != null) {
-                        obj = ((GeneratedPropertyContainer) componentConfiguration.getGrid()
-                                                                                  .getContainerDataSource()).getWrappedContainer()
-                                                                                                            .getContainerProperty(itemId,
-                                                                                                                                  visibleColumns[columns])
-                                                                                                            .getValue();
-                    }
                 }
                 else if (this.methodMap.containsKey(String.valueOf(visibleColumns[columns]))) {
                     // This condition takes care of the first level properties of the bean
                     obj = this.methodMap.get(String.valueOf(visibleColumns[columns]))
                                         .invoke(itemId);
-                }
-                else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof BeanItemContainer) {
-
-                    // These properties cannot be taken care by the above method map solution
-                    // This code is mainly to include the nested properties
-                    obj = componentConfiguration.getGrid()
-                                                .getContainerDataSource()
-                                                .getContainerProperty(itemId, visibleColumns[columns])
-                                                .getValue();
                 }
 
                 Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
