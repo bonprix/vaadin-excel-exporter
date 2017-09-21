@@ -1,5 +1,5 @@
 /*
- * 
+ *
  */
 package org.vaadin.addons.excelexporter;
 
@@ -11,6 +11,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -23,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -31,6 +34,7 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.extractor.XSSFExcelExtractor;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
@@ -40,6 +44,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder.BorderSide;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vaadin.addons.excelexporter.columnconfigs.BooleanColumnConfig;
+import org.vaadin.addons.excelexporter.columnconfigs.ColumnConfig;
+import org.vaadin.addons.excelexporter.columnconfigs.DataTypeEnum;
+import org.vaadin.addons.excelexporter.columnconfigs.NumberColumnConfig;
+import org.vaadin.addons.excelexporter.columnconfigs.TextColumnConfig;
 
 import com.vaadin.data.fieldgroup.FieldGroup;
 import com.vaadin.data.util.BeanItemContainer;
@@ -93,7 +102,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     Class typeClass = null;
 
     /** The method map. */
-    Hashtable<String, Method> methodMap = new Hashtable<String, Method>();
+    Hashtable<String, Method> methodMap = new Hashtable<>();
 
     /** The resultant export type. */
     private ExportType resultantExportType = null;
@@ -145,7 +154,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
     /**
      * This method prepares the initial data for work sheet
-     * 
+     *
      * @param exportExcelConfiguration the export excel configuration
      */
     protected void performPreprocessing(final ExportExcelConfiguration exportExcelConfiguration) {
@@ -155,10 +164,9 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         this.exportExcelConfiguration = exportExcelConfiguration;
 
         int sheetIndex = 0;
-        for (ExportExcelSheetConfiguration sheetConfig : exportExcelConfiguration.getSheetConfigs()) {
+        for (final ExportExcelSheetConfiguration sheetConfig : exportExcelConfiguration.getSheetConfigs()) {
             sheetConfig.setResultantSheetName((sheetConfig.getSheetName() != null && !sheetConfig.getSheetName()
-                                                                                                 .isEmpty()) ? sheetConfig.getSheetName()
-                                                                                                         : this.DEFAULT_SHEET_NAME + sheetIndex + 1);
+                .isEmpty()) ? sheetConfig.getSheetName() : this.DEFAULT_SHEET_NAME + sheetIndex + 1);
             sheetConfig.setResultantReportTitleRowContent(sheetConfig.getReportTitleRowContent() != null ? sheetConfig.getReportTitleRowContent()
                     : "Report Name: " + sheetConfig.getReportTitle());
             sheetConfig.setResultantLoggerInfoRowContent(sheetConfig.getLoggerInfoRowContent() != null ? sheetConfig.getLoggerInfoRowContent()
@@ -174,24 +182,17 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         this.resultantExportType = exportExcelConfiguration.getExportType();
 
         // one's. Asynchronous Call.
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-
-                getAllMethods(ExportToExcelUtility.this.typeClass, ExportToExcelUtility.this.methodMap);
-            }
-        });
+        final Thread thread = new Thread(() -> getAllMethods(ExportToExcelUtility.this.typeClass, ExportToExcelUtility.this.methodMap));
         thread.start();
     }
 
     /**
      * Gets the default file name.
      *
-     * 
+     *
      */
     public void getDefaultFileName() {
-        Calendar calendar = Calendar.getInstance();
+        final Calendar calendar = Calendar.getInstance();
         this.DEFAULT_FILE_NAME = this.DEFAULT_FILE_NAME + calendar.get(Calendar.DATE) + "_" + (calendar.get(Calendar.MONTH) + 1) + "_"
                 + calendar.get(Calendar.YEAR) + "__" + calendar.get(Calendar.HOUR) + "_" + calendar.get(Calendar.MINUTE) + "_" + calendar.get(Calendar.SECOND);
     }
@@ -207,24 +208,24 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         else {
             this.resultantSelectedExtension = "xlsx";
         }
-        Calendar calendar = Calendar.getInstance();
-        this.resultantExportFileName = ((this.exportExcelConfiguration.getExportFileName() != null && !this.exportExcelConfiguration.getExportFileName()
-                                                                                                                                    .isEmpty())
-                                                                                                                                            ? this.exportExcelConfiguration.getExportFileName()
-                                                                                                                                                    + "_"
-                                                                                                                                                    + calendar.get(Calendar.YEAR)
-                                                                                                                                                    + "_"
-                                                                                                                                                    + (calendar.get(Calendar.MONTH)
-                                                                                                                                                            + 1)
-                                                                                                                                                    + "_"
-                                                                                                                                                    + calendar.get(Calendar.DATE)
-                                                                                                                                            : this.DEFAULT_FILE_NAME)
-                + "." + this.resultantSelectedExtension;
+        final Calendar calendar = Calendar.getInstance();
 
+        if (((this.exportExcelConfiguration.getExportFileName() != null && !this.exportExcelConfiguration.getExportFileName()
+            .isEmpty()))) {
+            this.resultantExportFileName = this.exportExcelConfiguration.getExportFileName();
+            if (this.exportExcelConfiguration.getDateRequiredInFileName()) {
+                this.resultantExportFileName = this.resultantExportFileName + "_" + calendar.get(Calendar.YEAR) + "_" + (calendar.get(Calendar.MONTH) + 1) + "_"
+                        + calendar.get(Calendar.DATE);
+            }
+            this.resultantExportFileName = this.resultantExportFileName + "." + this.resultantSelectedExtension;
+        }
+        else {
+            this.resultantExportFileName = this.DEFAULT_FILE_NAME + "." + this.resultantSelectedExtension;
+        }
         this.workbook = new XSSFWorkbook();
 
         // Initializing Default Styles
-        for (ExportExcelSheetConfiguration sheetConfig : this.exportExcelConfiguration.getSheetConfigs()) {
+        for (final ExportExcelSheetConfiguration sheetConfig : this.exportExcelConfiguration.getSheetConfigs()) {
             sheetConfig.setSheet(this.workbook.createSheet(sheetConfig.getResultantSheetName()));
             sheetConfig.setrReportTitleStyle((sheetConfig.getReportTitleStyle() != null) ? sheetConfig.getReportTitleStyle()
                     : getDefaultReportTitleStyle(this.workbook));
@@ -239,7 +240,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             sheetConfig.setrAdditionalHeaderValueStyle((sheetConfig.getAdditionalHeaderValueStyle() != null) ? sheetConfig.getAdditionalHeaderValueStyle()
                     : getDefaultAddHeaderValueStyle(this.workbook));
 
-            for (ExportExcelComponentConfiguration componentConfig : sheetConfig.getComponentConfigs()) {
+            for (final ExportExcelComponentConfiguration componentConfig : sheetConfig.getComponentConfigs()) {
                 componentConfig.setrTableHeaderStyle((componentConfig.getTableHeaderStyle() != null) ? componentConfig.getTableHeaderStyle()
                         : getDefaultTableHeaderStyle(this.workbook));
                 componentConfig.setrTableFooterStyle((componentConfig.getTableFooterStyle() != null) ? componentConfig.getTableFooterStyle()
@@ -261,18 +262,18 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
         if (sheetConfiguration.getReportTitle() != null) {
             // Creating Report Name Row
-            Row myHeaderRow1 = sheetConfiguration.getSheet()
-                                                 .createRow(sheetConfiguration.getDefaultSheetRowNum());
-            Cell myHeaderCell1 = myHeaderRow1.createCell(0);
+            final Row myHeaderRow1 = sheetConfiguration.getSheet()
+                .createRow(sheetConfiguration.getDefaultSheetRowNum());
+            final Cell myHeaderCell1 = myHeaderRow1.createCell(0);
             myHeaderCell1.setCellValue(sheetConfiguration.getResultantReportTitleRowContent());
             myHeaderCell1.setCellStyle(sheetConfiguration.getrReportTitleStyle());
             sheetConfiguration.getSheet()
-                              .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getDefaultSheetRowNum(),
-                                      sheetConfiguration.getResultantColumnForTitleRegion()[0], sheetConfiguration.getResultantColumnForTitleRegion()[1]));
+                .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getDefaultSheetRowNum(),
+                        sheetConfiguration.getResultantColumnForTitleRegion()[0], sheetConfiguration.getResultantColumnForTitleRegion()[1]));
 
             // Adding AutoBreaks
             sheetConfiguration.getSheet()
-                              .setAutobreaks(true);
+                .setAutobreaks(true);
 
             sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
             // Adding an empty row after title
@@ -291,23 +292,22 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     protected Integer addGeneratedByAtFirst(final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration) {
 
         if (sheetConfiguration.getResultantLoggerInfoRowContent() != null && !sheetConfiguration.getResultantLoggerInfoRowContent()
-                                                                                                .isEmpty()) {
+            .isEmpty()) {
             // Creating Generated By Row
             sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
             // Adding an empty row before generated by
-            Row myHeaderRow2 = sheetConfiguration.getSheet()
-                                                 .createRow(sheetConfiguration.getDefaultSheetRowNum());
-            Cell myHeaderCell2 = myHeaderRow2.createCell(0);
+            final Row myHeaderRow2 = sheetConfiguration.getSheet()
+                .createRow(sheetConfiguration.getDefaultSheetRowNum());
+            final Cell myHeaderCell2 = myHeaderRow2.createCell(0);
             myHeaderCell2.setCellValue(sheetConfiguration.getResultantLoggerInfoRowContent());
             myHeaderCell2.setCellStyle(sheetConfiguration.getrGeneratedByStyle());
             sheetConfiguration.getSheet()
-                              .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getDefaultSheetRowNum(),
-                                      sheetConfiguration.getResultantColumnForGeneratedByRegion()[0],
-                                      sheetConfiguration.getResultantColumnForGeneratedByRegion()[1]));
+                .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getDefaultSheetRowNum(),
+                        sheetConfiguration.getResultantColumnForGeneratedByRegion()[0], sheetConfiguration.getResultantColumnForGeneratedByRegion()[1]));
 
             // Adding AutoBreaks
             sheetConfiguration.getSheet()
-                              .setAutobreaks(true);
+                .setAutobreaks(true);
 
             sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
             // Adding an empty row after generated by
@@ -378,8 +378,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             final ExportExcelComponentConfiguration componentConfiguration) {
 
         return createGenericContent(grid.getContainerDataSource()
-                                        .getItemIds(),
-                                    myWorkBook, sheetConfiguration, componentConfiguration);
+            .getItemIds(), myWorkBook, sheetConfiguration, componentConfiguration);
     }
 
     /************************************ Adding Vaadin Grid To Sheet *******************************************/
@@ -442,8 +441,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     protected Integer createGridContent(final Table grid, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
         return createGenericContent(grid.getContainerDataSource()
-                                        .getItemIds(),
-                                    myWorkBook, sheetConfiguration, componentConfiguration);
+            .getItemIds(), myWorkBook, sheetConfiguration, componentConfiguration);
     }
 
     /************************************ Adding Vaadin Table To Sheet *******************************************/
@@ -511,18 +509,18 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             final ExportExcelComponentConfiguration componentConfiguration) {
 
         final Collection<?> itemIds = treeTable.getContainerDataSource()
-                                               .getItemIds();
+            .getItemIds();
 
         if (sheetConfiguration.getIsHeaderSectionAdded()) {
             sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
         }
 
         sheetConfiguration.getSheet()
-                          .setRowBreak(sheetConfiguration.getDefaultSheetRowNum());
+            .setRowBreak(sheetConfiguration.getDefaultSheetRowNum());
 
         if (componentConfiguration.getColRowFreeze() != null) {
             sheetConfiguration.getSheet()
-                              .createFreezePane(componentConfiguration.getColRowFreeze(), sheetConfiguration.getDefaultSheetRowNum());
+                .createFreezePane(componentConfiguration.getColRowFreeze(), sheetConfiguration.getDefaultSheetRowNum());
         }
 
         // Adding Column Headers
@@ -534,7 +532,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
             addGenericDataRow(componentConfiguration.getVisibleProperties(), myWorkBook, sheetConfiguration, componentConfiguration, itemId,
                               sheetConfiguration.getDefaultSheetRowNum(), treeTable.getContainerDataSource()
-                                                                                   .hasChildren(itemId));
+                                  .hasChildren(itemId));
             sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
         }
 
@@ -546,7 +544,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         // Disabling auto columns for each column
         for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
             sheetConfiguration.getSheet()
-                              .autoSizeColumn(columns, false);
+                .autoSizeColumn(columns, false);
         }
 
         // Adding auto filter in the Excel Header
@@ -578,11 +576,11 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             int rowCounter = 0;
             Row row = null;
 
-            for (String property : visiblePropsInHeader) {
+            for (final String property : visiblePropsInHeader) {
                 if (headerFilterGroup.getField(property) != null) {
                     if (visiblePropsInHeader.length == 1) {
                         row = sheetConfiguration.getSheet()
-                                                .createRow(sheetConfiguration.getDefaultSheetRowNum());
+                            .createRow(sheetConfiguration.getDefaultSheetRowNum());
                         sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1);
                     }
                     else if (rowCounter % (sheetConfiguration.getNoOfColumnsInHeader()) != 0) {
@@ -594,21 +592,21 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         sheetConfiguration.setResultantHeaderCaptionStartCol(0);
                         sheetConfiguration.setResultantHeaderValueStartCol(1);
                         row = sheetConfiguration.getSheet()
-                                                .createRow(sheetConfiguration.getDefaultSheetRowNum());
+                            .createRow(sheetConfiguration.getDefaultSheetRowNum());
                     }
 
-                    Cell captionCell = row.createCell(sheetConfiguration.getResultantHeaderCaptionStartCol());
+                    final Cell captionCell = row.createCell(sheetConfiguration.getResultantHeaderCaptionStartCol());
                     captionCell.setCellValue(headerFilterGroup.getField(property)
-                                                              .getCaption());
+                        .getCaption());
                     captionCell.setCellStyle(sheetConfiguration.getrHeaderCaptionStyle());
 
-                    Cell valueCell = row.createCell(sheetConfiguration.getResultantHeaderValueStartCol());
+                    final Cell valueCell = row.createCell(sheetConfiguration.getResultantHeaderValueStartCol());
                     valueCell.setCellStyle(sheetConfiguration.getrHeaderValueStyle());
                     if (headerFilterGroup.getField(property)
-                                         .getValue() != null) {
+                        .getValue() != null) {
                         valueCell.setCellValue(headerFilterGroup.getField(property)
-                                                                .getValue()
-                                                                .toString());
+                            .getValue()
+                            .toString());
                     }
                     else {
                         valueCell.setCellValue("");
@@ -621,7 +619,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
         int additionalInfoCounter = 0;
         if (sheetConfiguration.getAdditionalHeaderInfo() != null && !sheetConfiguration.getAdditionalHeaderInfo()
-                                                                                       .isEmpty()) {
+            .isEmpty()) {
 
             if (sheetConfiguration.getIsHeaderSectionAdded()) {
                 sheetConfiguration.setDefaultSheetRowNum(sheetConfiguration.getDefaultSheetRowNum() + 1); // Adding
@@ -637,13 +635,13 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                 sheetConfiguration.setIsHeaderSectionAdded(Boolean.TRUE);
             }
 
-            Iterator<Map.Entry<String, String>> it = sheetConfiguration.getAdditionalHeaderInfo()
-                                                                       .entrySet()
-                                                                       .iterator();
+            final Iterator<Map.Entry<String, String>> it = sheetConfiguration.getAdditionalHeaderInfo()
+                .entrySet()
+                .iterator();
             Row row = null;
 
             while (it.hasNext()) {
-                Map.Entry<String, String> me = it.next();
+                final Map.Entry<String, String> me = it.next();
                 if (additionalInfoCounter % (sheetConfiguration.getNoOfColumnsInAddHeader()) != 0) {
                     sheetConfiguration.setResultantHeaderCaptionStartCol(sheetConfiguration.getResultantHeaderCaptionStartCol()
                             + sheetConfiguration.getNoOfColumnsToMergeInAddHeaderValue() + 1);
@@ -655,21 +653,21 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                     sheetConfiguration.setResultantHeaderCaptionStartCol(0);
                     sheetConfiguration.setResultantHeaderValueStartCol(1);
                     row = sheetConfiguration.getSheet()
-                                            .createRow(sheetConfiguration.getDefaultSheetRowNum());
+                        .createRow(sheetConfiguration.getDefaultSheetRowNum());
                 }
 
-                Cell captionCell = row.createCell(sheetConfiguration.getResultantHeaderCaptionStartCol());
+                final Cell captionCell = row.createCell(sheetConfiguration.getResultantHeaderCaptionStartCol());
                 captionCell.setCellValue(me.getKey());
                 captionCell.setCellStyle(sheetConfiguration.getrAdditionalHeaderCaptionStyle());
 
-                Cell valueCell = row.createCell(sheetConfiguration.getResultantHeaderValueStartCol());
+                final Cell valueCell = row.createCell(sheetConfiguration.getResultantHeaderValueStartCol());
                 valueCell.setCellStyle(sheetConfiguration.getrAdditionalHeaderValueStyle());
 
-                CellRangeAddress valueMerged = new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getDefaultSheetRowNum(),
-                        sheetConfiguration.getResultantHeaderValueStartCol(),
+                final CellRangeAddress valueMerged = new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(),
+                        sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getResultantHeaderValueStartCol(),
                         sheetConfiguration.getResultantHeaderValueStartCol() + (sheetConfiguration.getNoOfColumnsToMergeInAddHeaderValue() - 1));
                 sheetConfiguration.getSheet()
-                                  .addMergedRegion(valueMerged);
+                    .addMergedRegion(valueMerged);
 
                 if (me.getValue() != null) {
                     valueCell.setCellValue(me.getValue());
@@ -712,11 +710,11 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         }
 
         sheetConfiguration.getSheet()
-                          .setRowBreak(sheetConfiguration.getDefaultSheetRowNum());
+            .setRowBreak(sheetConfiguration.getDefaultSheetRowNum());
 
         if (componentConfiguration.getColRowFreeze() != null) {
             sheetConfiguration.getSheet()
-                              .createFreezePane(componentConfiguration.getColRowFreeze(), sheetConfiguration.getDefaultSheetRowNum());
+                .createFreezePane(componentConfiguration.getColRowFreeze(), sheetConfiguration.getDefaultSheetRowNum());
         }
 
         // Adding Configured Header Rows
@@ -738,7 +736,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         // Disabling auto columns for each column
         for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
             sheetConfiguration.getSheet()
-                              .autoSizeColumn(columns, false);
+                .autoSizeColumn(columns, false);
         }
 
         // Adding auto filter in the Excel Header
@@ -759,38 +757,37 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     protected Integer addGenericHeaderRows(final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
 
-        for (ComponentHeaderConfiguration headerConfig : componentConfiguration.getHeaderConfigs()) {
-            Row myRow = sheetConfiguration.getSheet()
-                                          .createRow(sheetConfiguration.getDefaultSheetRowNum());
+        for (final ComponentHeaderConfiguration headerConfig : componentConfiguration.getHeaderConfigs()) {
+            final Row myRow = sheetConfiguration.getSheet()
+                .createRow(sheetConfiguration.getDefaultSheetRowNum());
 
             int startMerge = -999;
             int endMerge = -999;
             String mergedText = "-";
             for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
-                Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
+                final Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
                 if (headerConfig.getMergedCells() != null) {
-                    for (MergedCell joinedHeader : headerConfig.getMergedCells()) {
+                    for (final MergedCell joinedHeader : headerConfig.getMergedCells()) {
                         if (joinedHeader.getStartProperty()
-                                        .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
                             startMerge = columns;
                             mergedText = joinedHeader.getHeaderKey();
                             myCell.setCellValue(mergedText);
                             break;
                         }
                         else if (joinedHeader.getEndProperty()
-                                             .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
                             endMerge = columns;
                             sheetConfiguration.getSheet()
-                                              .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(),
-                                                      sheetConfiguration.getDefaultSheetRowNum(), startMerge, endMerge));
+                                .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getDefaultSheetRowNum(),
+                                        startMerge, endMerge));
                             break;
                         }
                         else {
 
                             if (headerConfig.getHeaderRow() != null) {
                                 addGenericGridHeaderRow(headerConfig.getHeaderRow()
-                                                                    .getCell(componentConfiguration.getVisibleProperties()[columns]),
-                                                        myCell);
+                                    .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
                             }
                             else if (headerConfig.getColumnHeaderKeys() != null) {
                                 myCell.setCellValue(headerConfig.getColumnHeaderKeys()[columns]);
@@ -799,13 +796,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         }
                     }
                     sheetConfiguration.getSheet()
-                                      .autoSizeColumn(columns, false);
+                        .autoSizeColumn(columns, false);
                 }
                 else {
                     if (headerConfig.getHeaderRow() != null) {
                         addGenericGridHeaderRow(headerConfig.getHeaderRow()
-                                                            .getCell(componentConfiguration.getVisibleProperties()[columns]),
-                                                myCell);
+                            .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
                     }
                     else if (headerConfig.getColumnHeaderKeys() != null) {
                         myCell.setCellValue(headerConfig.getColumnHeaderKeys()[columns]);
@@ -830,38 +826,37 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     protected Integer addGenericFooterRows(final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration) {
 
-        for (ComponentFooterConfiguration footerConfig : componentConfiguration.getFooterConfigs()) {
-            Row myRow = sheetConfiguration.getSheet()
-                                          .createRow(sheetConfiguration.getDefaultSheetRowNum());
+        for (final ComponentFooterConfiguration footerConfig : componentConfiguration.getFooterConfigs()) {
+            final Row myRow = sheetConfiguration.getSheet()
+                .createRow(sheetConfiguration.getDefaultSheetRowNum());
 
             int startMerge = -999;
             int endMerge = -999;
             String mergedText = "-";
             for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
-                Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
+                final Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
                 if (footerConfig.getMergedCells() != null) {
-                    for (MergedCell joinedHeader : footerConfig.getMergedCells()) {
+                    for (final MergedCell joinedHeader : footerConfig.getMergedCells()) {
                         if (joinedHeader.getStartProperty()
-                                        .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
                             startMerge = columns;
                             mergedText = joinedHeader.getHeaderKey();
                             myCell.setCellValue(mergedText);
                             break;
                         }
                         else if (joinedHeader.getEndProperty()
-                                             .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
+                            .equalsIgnoreCase(String.valueOf(componentConfiguration.getVisibleProperties()[columns]))) {
                             endMerge = columns;
                             sheetConfiguration.getSheet()
-                                              .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(),
-                                                      sheetConfiguration.getDefaultSheetRowNum(), startMerge, endMerge));
+                                .addMergedRegion(new CellRangeAddress(sheetConfiguration.getDefaultSheetRowNum(), sheetConfiguration.getDefaultSheetRowNum(),
+                                        startMerge, endMerge));
                             break;
                         }
                         else {
 
                             if (footerConfig.getFooterRow() != null) {
                                 addGenericGridFooterRow(footerConfig.getFooterRow()
-                                                                    .getCell(componentConfiguration.getVisibleProperties()[columns]),
-                                                        myCell);
+                                    .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
                             }
                             else if (footerConfig.getColumnFooterKeys() != null) {
                                 myCell.setCellValue(footerConfig.getColumnFooterKeys()[columns]);
@@ -870,13 +865,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         }
                     }
                     sheetConfiguration.getSheet()
-                                      .autoSizeColumn(columns, false);
+                        .autoSizeColumn(columns, false);
                 }
                 else {
                     if (footerConfig.getFooterRow() != null) {
                         addGenericGridFooterRow(footerConfig.getFooterRow()
-                                                            .getCell(componentConfiguration.getVisibleProperties()[columns]),
-                                                myCell);
+                            .getCell(componentConfiguration.getVisibleProperties()[columns]), myCell);
                     }
                     else if (footerConfig.getColumnFooterKeys() != null) {
                         myCell.setCellValue(footerConfig.getColumnFooterKeys()[columns]);
@@ -900,17 +894,17 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     private void addGenericGridHeaderRow(final HeaderCell gridHeaderCell, final Cell myCell) {
 
         if (gridHeaderCell.getCellType()
-                          .equals(GridStaticCellType.TEXT)) {
+            .equals(GridStaticCellType.TEXT)) {
             myCell.setCellValue(gridHeaderCell.getText());
         }
         else if (gridHeaderCell.getCellType()
-                               .equals(GridStaticCellType.HTML)) {
+            .equals(GridStaticCellType.HTML)) {
             myCell.setCellValue(gridHeaderCell.getHtml());
         }
         else if (gridHeaderCell.getCellType()
-                               .equals(GridStaticCellType.WIDGET)) {
+            .equals(GridStaticCellType.WIDGET)) {
             myCell.setCellValue(gridHeaderCell.getComponent()
-                                              .toString());
+                .toString());
         }
     }
 
@@ -923,17 +917,17 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     private void addGenericGridFooterRow(final FooterCell gridHeaderCell, final Cell myCell) {
 
         if (gridHeaderCell.getCellType()
-                          .equals(GridStaticCellType.TEXT)) {
+            .equals(GridStaticCellType.TEXT)) {
             myCell.setCellValue(gridHeaderCell.getText());
         }
         else if (gridHeaderCell.getCellType()
-                               .equals(GridStaticCellType.HTML)) {
+            .equals(GridStaticCellType.HTML)) {
             myCell.setCellValue(gridHeaderCell.getHtml());
         }
         else if (gridHeaderCell.getCellType()
-                               .equals(GridStaticCellType.WIDGET)) {
+            .equals(GridStaticCellType.WIDGET)) {
             myCell.setCellValue(gridHeaderCell.getComponent()
-                                              .toString());
+                .toString());
         }
     }
 
@@ -950,25 +944,30 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      */
     protected void addGenericDataRow(final Object[] visibleColumns, final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration,
             final ExportExcelComponentConfiguration componentConfiguration, final Object itemId, final Integer localRow, final Boolean isParent) {
-        Row myRow = sheetConfiguration.getSheet()
-                                      .createRow(localRow);
+
+        final XSSFExcelExtractor extractor = new XSSFExcelExtractor(myWorkBook);
+        extractor.setLocale(UI.getCurrent()
+            .getLocale());
+
+        final Row myRow = sheetConfiguration.getSheet()
+            .createRow(localRow);
         try {
 
             for (int columns = 0; columns < visibleColumns.length; columns++) {
 
                 Object obj = null;
                 if (componentConfiguration.getTable() != null && componentConfiguration.getTable()
-                                                                                       .getContainerDataSource() instanceof IndexedContainer) {
+                    .getContainerDataSource() instanceof IndexedContainer) {
                     obj = componentConfiguration.getTable()
-                                                .getItem(itemId)
-                                                .getItemProperty(visibleColumns[columns])
-                                                .getValue();
+                        .getItem(itemId)
+                        .getItemProperty(visibleColumns[columns])
+                        .getValue();
                     if (componentConfiguration.getTable()
-                                              .getColumnGenerator(visibleColumns[columns]) != null) {
+                        .getColumnGenerator(visibleColumns[columns]) != null) {
                         try {
                             obj = componentConfiguration.getTable()
-                                                        .getColumnGenerator(visibleColumns[columns])
-                                                        .generateCell(componentConfiguration.getTable(), itemId, visibleColumns[columns]);
+                                .getColumnGenerator(visibleColumns[columns])
+                                .generateCell(componentConfiguration.getTable(), itemId, visibleColumns[columns]);
                             if (obj != null && !(obj instanceof Component) && !(obj instanceof String)) {
                                 // Avoid errors if a generator returns
                                 // something
@@ -976,106 +975,315 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                                 obj = obj.toString();
                             }
                         }
-                        catch (Exception e) {
+                        catch (final Exception e) {
                         }
                     }
 
                 }
                 else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof IndexedContainer) {
+                    .getContainerDataSource() instanceof IndexedContainer) {
                     obj = componentConfiguration.getGrid()
-                                                .getContainerDataSource()
-                                                .getContainerProperty(itemId, visibleColumns[columns])
-                                                .getValue();
+                        .getContainerDataSource()
+                        .getContainerProperty(itemId, visibleColumns[columns])
+                        .getValue();
                 }
                 else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof GeneratedPropertyContainer) {
+                    .getContainerDataSource() instanceof GeneratedPropertyContainer) {
                     if (((GeneratedPropertyContainer) componentConfiguration.getGrid()
-                                                                            .getContainerDataSource()).getWrappedContainer() != null) {
+                        .getContainerDataSource()).getWrappedContainer() != null) {
                         obj = ((GeneratedPropertyContainer) componentConfiguration.getGrid()
-                                                                                  .getContainerDataSource()).getWrappedContainer()
-                                                                                                            .getContainerProperty(itemId,
-                                                                                                                                  visibleColumns[columns])
-                                                                                                            .getValue();
+                            .getContainerDataSource()).getWrappedContainer()
+                                .getContainerProperty(itemId, visibleColumns[columns])
+                                .getValue();
                     }
                 }
                 else if (this.methodMap.containsKey(String.valueOf(visibleColumns[columns]))) {
                     // This condition takes care of the first level properties of the bean
                     obj = this.methodMap.get(String.valueOf(visibleColumns[columns]))
-                                        .invoke(itemId);
+                        .invoke(itemId);
                 }
                 else if (componentConfiguration.getGrid() != null && componentConfiguration.getGrid()
-                                                                                           .getContainerDataSource() instanceof BeanItemContainer) {
+                    .getContainerDataSource() instanceof BeanItemContainer) {
 
                     // These properties cannot be taken care by the above method map solution
                     // This code is mainly to include the nested properties
                     obj = componentConfiguration.getGrid()
-                                                .getContainerDataSource()
-                                                .getContainerProperty(itemId, visibleColumns[columns])
-                                                .getValue();
+                        .getContainerDataSource()
+                        .getContainerProperty(itemId, visibleColumns[columns])
+                        .getValue();
                 }
 
-                Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
+                final Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
+                XSSFCellStyle cellStyle = myWorkBook.createCellStyle();
+                if (isParent) {
+                    cellStyle = getDefaultTableContentParentStyle(myWorkBook);
+                }
+                if (localRow % 2 == 0) {
+                    cellStyle = isParent ? getDefaultTableContentParentStyle(myWorkBook) : componentConfiguration.getrTableContentStyle();
+                }
 
                 if ((obj != null)) {
-                    if (componentConfiguration.getDateFormattingProperties() != null && componentConfiguration.getDateFormattingProperties()
-                                                                                                              .contains(String.valueOf(visibleColumns[columns]))) {
-                        myCell.setCellValue(formatDate((Date) obj, sheetConfiguration));
-                    }
-                    else if (componentConfiguration.getIntegerFormattingProperties() != null && componentConfiguration.getIntegerFormattingProperties()
-                                                                                                                      .contains(String.valueOf(visibleColumns[columns]))) {
 
-                        String formattedInteger = localizedFormat(obj != null && !String.valueOf(obj)
-                                                                                        .isEmpty() ? String.valueOf(obj) : null,
-                                                                  Boolean.TRUE);
-                        String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, formattedInteger);
-                        myCell.setCellValue(customFormattedString != null ? customFormattedString : formattedInteger);
-                    }
-                    else if (componentConfiguration.getFloatFormattingProperties() != null && componentConfiguration.getFloatFormattingProperties()
-                                                                                                                    .contains(String.valueOf(visibleColumns[columns]))) {
-                        if (obj instanceof Double) {
+                    if (checkIfColumnConfigExists(componentConfiguration, visibleColumns, columns)) {
 
-                            String formattedDouble = formatFloat((Double) obj);
-                            String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, formattedDouble);
-                            myCell.setCellValue(customFormattedString != null ? customFormattedString : formattedDouble);
+                        final Optional<? extends ColumnConfig> columnConfig = getColumnConfig(componentConfiguration, visibleColumns, columns);
+                        if (columnConfig.isPresent() && (columnConfig.get()
+                            .getDatatype()
+                            .equals(DataTypeEnum.INTEGER)
+                                || columnConfig.get()
+                                    .getDatatype()
+                                    .equals(DataTypeEnum.LONG)
+                                || columnConfig.get()
+                                    .getDatatype()
+                                    .equals(DataTypeEnum.SHORT))) {
+
+                            handleIntegerCellFormat(columnConfig.get(), myWorkBook, cellStyle);
+                            myCell.setCellValue((Long.valueOf(String.valueOf(obj))));
+
                         }
-                        else if (obj instanceof BigDecimal) {
-                            {
-                                String formattedBigDecimal = formatFloat(((BigDecimal) obj).doubleValue());
-                                String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns,
-                                                                                    formattedBigDecimal);
-                                myCell.setCellValue(customFormattedString != null ? customFormattedString : formattedBigDecimal);
+                        else if (columnConfig.isPresent() && (columnConfig.get()
+                            .getDatatype()
+                            .equals(DataTypeEnum.FLOAT)
+                                || columnConfig.get()
+                                    .getDatatype()
+                                    .equals(DataTypeEnum.DOUBLE)
+                                || columnConfig.get()
+                                    .getDatatype()
+                                    .equals(DataTypeEnum.BIGDECIMAL))) {
+
+                            handleFloatCellFormat(columnConfig.get(), myWorkBook, cellStyle);
+
+                            if (obj instanceof Float) {
+                                myCell.setCellValue((Float) obj);
                             }
+                            else if (obj instanceof Double) {
+                                myCell.setCellValue((Double) obj);
+                            }
+                            else if (obj instanceof BigDecimal) {
+                                myCell.setCellValue(((BigDecimal) obj).doubleValue());
+                            }
+
                         }
-                    }
-                    else if (componentConfiguration.getBooleanFormattingProperties() != null && componentConfiguration.getBooleanFormattingProperties()
-                                                                                                                      .contains(String.valueOf(visibleColumns[columns]))) {
-                        String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns,
-                                                                            Boolean.valueOf((boolean) obj));
-                        myCell.setCellValue(customFormattedString != null ? customFormattedString : obj.toString());
+                        else if (columnConfig.isPresent() && columnConfig.get()
+                            .getDatatype()
+                            .equals(DataTypeEnum.DATE)) {
+                            handleDateCellFormat(myWorkBook, sheetConfiguration, cellStyle);
+                            myCell.setCellValue((Date) obj);
+                        }
+                        else if (columnConfig.isPresent() && columnConfig.get()
+                            .getDatatype()
+                            .equals(DataTypeEnum.BOOLEAN)) {
+
+                            final String customFormattedString = handleBooleanCellFormat(columnConfig.get(), itemId, obj);
+                            myCell.setCellValue(customFormattedString != null ? customFormattedString : obj.toString());
+
+                        }
+                        else if (columnConfig.isPresent()) {
+                            final String customFormattedString = handleTextCellFormat(columnConfig.get(), obj);
+                            myCell.setCellValue(customFormattedString != null ? customFormattedString : obj.toString());
+                        }
+
+                        if (columnConfig.isPresent() && columnConfig.get()
+                            .getCustomColumnFormatter() != null) {
+                            final String formatted = applyColumnFormatter(columnConfig.get(), itemId, obj);
+                            myCell.setCellValue(formatted != null ? formatted : obj.toString());
+                        }
                     }
                     else {
-
-                        String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, obj);
-                        myCell.setCellValue(customFormattedString != null ? customFormattedString : obj.toString());
+                        myCell.setCellValue(obj.toString());
                     }
+
+                    // if (componentConfiguration.getDateFormattingProperties() != null && componentConfiguration.getDateFormattingProperties()
+                    // .contains(String.valueOf(visibleColumns[columns]))) {
+                    // myCell.setCellValue(formatDate((Date) obj, sheetConfiguration));
+                    // }
+                    // else if (componentConfiguration.getIntegerFormattingProperties() != null && componentConfiguration.getIntegerFormattingProperties()
+                    // .contains(String.valueOf(visibleColumns[columns]))) {
+                    //
+                    // // String formattedInteger = localizedFormat(obj != null && !String.valueOf(obj)
+                    // // .isEmpty() ? String.valueOf(obj) : null,
+                    // // Boolean.TRUE);
+                    // // String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, formattedInteger);
+                    // // myCell.setCellValue(customFormattedString != null ? customFormattedString : formattedInteger);
+                    //
+                    // // XSSFCellStyle cellStyle = (getEvaluatedStyle(isParent, myWorkBook, componentConfiguration,
+                    // // localRow)==null)?myWorkBook.createCellStyle():getEvaluatedStyle(isParent, myWorkBook, componentConfiguration, localRow);
+                    //
+                    // // myCell.setCellStyle(cellStyle);
+                    //
+                    // // cellStyle.setDataFormat((short) 3);
+                    // addCellDataFormat(myWorkBook, cellStyle, true, "USD", "$");
+                    // myCell.setCellValue((Long.valueOf(String.valueOf(obj))));
+                    // }
+                    // else if (componentConfiguration.getFloatFormattingProperties() != null && componentConfiguration.getFloatFormattingProperties()
+                    // .contains(String.valueOf(visibleColumns[columns]))) {
+                    // if (obj instanceof Double) {
+                    //
+                    // // String formattedDouble = formatFloat((Double) obj);
+                    // // String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, formattedDouble);
+                    // // myCell.setCellValue(customFormattedString != null ? customFormattedString : formattedDouble);
+                    //
+                    // // XSSFCellStyle cellStyle = (getEvaluatedStyle(isParent, myWorkBook, componentConfiguration,
+                    // // localRow)==null)?myWorkBook.createCellStyle():getEvaluatedStyle(isParent, myWorkBook, componentConfiguration, localRow);
+                    // // myCell.setCellStyle(cellStyle);
+                    //
+                    // // cellStyle.setDataFormat((short) 4);
+                    // addCellDataFormat(myWorkBook, cellStyle, false, "USD", "$");
+                    // myCell.setCellValue((Double) obj);
+                    // }
+                    // else if (obj instanceof BigDecimal) {
+                    // {
+                    // // String formattedBigDecimal = formatFloat(((BigDecimal) obj).doubleValue());
+                    // // String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns,
+                    // // formattedBigDecimal);
+                    // // myCell.setCellValue(customFormattedString != null ? customFormattedString : formattedBigDecimal);
+                    //
+                    // // XSSFCellStyle cellStyle = (getEvaluatedStyle(isParent, myWorkBook, componentConfiguration,
+                    // // localRow)==null)?myWorkBook.createCellStyle():getEvaluatedStyle(isParent, myWorkBook, componentConfiguration, localRow);
+                    // // myCell.setCellStyle(cellStyle);
+                    //
+                    // // cellStyle.setDataFormat((short) 4);
+                    // addCellDataFormat(myWorkBook, cellStyle, false, "USD", "$");
+                    // myCell.setCellValue(((BigDecimal) obj).doubleValue());
+                    //
+                    // }
+                    // }
+                    // }
+                    // else if (componentConfiguration.getBooleanFormattingProperties() != null && componentConfiguration.getBooleanFormattingProperties()
+                    // .contains(String.valueOf(visibleColumns[columns]))) {
+                    // final String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns,
+                    // Boolean.valueOf((boolean) obj));
+                    // myCell.setCellValue(customFormattedString != null ? customFormattedString : obj.toString());
+                    // }
+                    // else {
+                    //
+                    // final String customFormattedString = applyColumnFormatter(visibleColumns, componentConfiguration, itemId, columns, obj);
+                    // myCell.setCellValue(customFormattedString != null ? customFormattedString : obj.toString());
+                    // }
                 }
                 else {
                     myCell.setCellValue("");
                 }
 
-                if (isParent) {
-                    myCell.setCellStyle(getDefaultTableContentParentStyle(myWorkBook));
-                }
-                if (localRow % 2 == 0) {
-                    myCell.setCellStyle(isParent ? getDefaultTableContentParentStyle(myWorkBook) : componentConfiguration.getrTableContentStyle());
-                }
+                myCell.setCellStyle(cellStyle);
 
             }
         }
-        catch (Exception e) {
-            ExportToExcelUtility.LOGGER.error("addGenericDataRow" + ") throws + " + e.getMessage());
+        catch (final Exception e) {
+            e.printStackTrace();
+            ExportToExcelUtility.LOGGER.error("addGenericDataRow" + ") throws + " + e.getCause());
         }
+    }
+
+    private void handleDateCellFormat(final XSSFWorkbook myWorkBook, final ExportExcelSheetConfiguration sheetConfiguration, final XSSFCellStyle cellStyle) {
+
+        final XSSFDataFormat df = myWorkBook.createDataFormat();
+        cellStyle.setDataFormat(df.getFormat(sheetConfiguration.getDateFormat())); // "ddd, dd-mm-yyyy"
+
+    }
+
+    private boolean checkIfColumnConfigExists(final ExportExcelComponentConfiguration componentConfiguration, final Object[] visibleColumns,
+            final int columns) {
+        return componentConfiguration.getColumnConfigs() != null && componentConfiguration.getColumnConfigs()
+            .stream()
+            .filter(e -> e.getProperty()
+                .equals(visibleColumns[columns]))
+            .findAny()
+            .orElse(null) != null;
+    }
+
+    private Optional<? extends ColumnConfig> getColumnConfig(final ExportExcelComponentConfiguration componentConfiguration, final Object[] visibleColumns,
+            final int columns) {
+        return componentConfiguration.getColumnConfigs()
+            .stream()
+            .filter(e -> e.getProperty()
+                .equals(visibleColumns[columns]))
+            .findAny();
+    }
+
+    private String handleTextCellFormat(final ColumnConfig columnConfig, final Object obj) {
+        if (obj != null) {
+            final StringBuilder customFormattedString = new StringBuilder();
+            if (((TextColumnConfig) columnConfig).getPrefix() != null) {
+                customFormattedString.append(((TextColumnConfig) columnConfig).getPrefix());
+            }
+            customFormattedString.append((String) obj);
+            if (((TextColumnConfig) columnConfig).getSuffix() != null) {
+                customFormattedString.append(((TextColumnConfig) columnConfig).getSuffix());
+            }
+            return customFormattedString.toString();
+        }
+        else {
+            return null;
+        }
+    }
+
+    private String handleBooleanCellFormat(final ColumnConfig columnConfig, final Object itemId, final Object obj) {
+        String customFormattedString = null;
+        if (((BooleanColumnConfig) columnConfig).getBooleanColumnFormatter() != null) {
+            customFormattedString = (String) ((BooleanColumnConfig) columnConfig).getBooleanColumnFormatter()
+                .generateCell(obj, itemId, columnConfig.getProperty());
+        }
+        return customFormattedString;
+    }
+
+    private void handleIntegerCellFormat(final ColumnConfig columnConfig, final XSSFWorkbook myWorkBook, final XSSFCellStyle cellStyle) {
+
+        final XSSFDataFormat df = myWorkBook.createDataFormat();
+
+        final StringBuilder integerForm = new StringBuilder();
+
+        if (((NumberColumnConfig) columnConfig).getPrefix() != null) {
+            integerForm.append("\"" + ((NumberColumnConfig) columnConfig).getPrefix() + "\"");
+        }
+        if (((NumberColumnConfig) columnConfig).getThousandSeperationRequired() != null) {
+            integerForm.append("#,##0");
+        }
+        else {
+            integerForm.append("0");
+        }
+        if (((NumberColumnConfig) columnConfig).getSuffix() != null) {
+            integerForm.append("\" " + ((NumberColumnConfig) columnConfig).getSuffix() + "\"");
+        }
+        cellStyle.setDataFormat(df.getFormat(integerForm.toString()));
+    }
+
+    private void handleFloatCellFormat(final ColumnConfig columnConfig, final XSSFWorkbook myWorkBook, final XSSFCellStyle cellStyle) {
+
+        final XSSFDataFormat df = myWorkBook.createDataFormat();
+
+        final StringBuilder floatForm = new StringBuilder();
+
+        if (((NumberColumnConfig) columnConfig).getPrefix() != null) {
+            floatForm.append("\"" + ((NumberColumnConfig) columnConfig).getPrefix() + "\"");
+        }
+        if (((NumberColumnConfig) columnConfig).getThousandSeperationRequired() != null) {
+            floatForm.append("#,##0.00");
+        }
+        else {
+            floatForm.append("0.00");
+        }
+        if (((NumberColumnConfig) columnConfig).getSuffix() != null) {
+            floatForm.append("\" " + ((NumberColumnConfig) columnConfig).getSuffix() + "\"");
+        }
+        cellStyle.setDataFormat(df.getFormat(floatForm.toString()));
+    }
+
+    public void addCellDataFormat(final XSSFWorkbook myWorkBook, final XSSFCellStyle cellStyle, final Boolean isInteger, final String suffix,
+            final String prefix) {
+
+        final XSSFDataFormat df = myWorkBook.createDataFormat();
+        final DecimalFormat format = new DecimalFormat();
+        format.setDecimalFormatSymbols(new DecimalFormatSymbols(UI.getCurrent()
+            .getLocale()));
+        format.setMinimumIntegerDigits(1);
+        format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(2);
+        format.setGroupingUsed(true);
+
+        final String integerForm = "\"" + prefix + "\"#,##0\" " + suffix + "\"";
+        final String floatForm = "\"" + prefix + "\"#,##0.00\" " + suffix + "\"";
+        cellStyle.setDataFormat(isInteger ? df.getFormat(integerForm) : df.getFormat(floatForm));
     }
 
     /**
@@ -1088,15 +1296,14 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @param obj the obj
      * @return the string
      */
-    private String applyColumnFormatter(final Object[] visibleColumns, final ExportExcelComponentConfiguration componentConfiguration, final Object itemId,
-            final int columns, final Object obj) {
+    private String applyColumnFormatter(final ColumnConfig columnConfig, final Object itemId, final Object obj) {
         String formatted = null;
-        if (componentConfiguration.getColumnFormatter(visibleColumns[columns]) != null) {
+        if (columnConfig.getCustomColumnFormatter() != null) {
             try {
-                formatted = (String) componentConfiguration.getColumnFormatter(visibleColumns[columns])
-                                                           .generateCell(obj, itemId, visibleColumns[columns]);
+                formatted = (String) columnConfig.getCustomColumnFormatter()
+                    .generateCell(obj, itemId, columnConfig.getProperty());
             }
-            catch (Exception e) {
+            catch (final Exception e) {
             }
         }
         return formatted;
@@ -1107,7 +1314,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      *
      * @param type the type
      * @param map the map
-     * 
+     *
      */
     public void getAllMethods(Class type, final Hashtable<String, Method> map) {
 
@@ -1115,14 +1322,14 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             for (final Field field : type.getDeclaredFields()) {
 
                 if (!field.getName()
-                          .equals("serialVersionUID")) {
+                    .equals("serialVersionUID")) {
                     field.setAccessible(true);
 
-                    String name = field.getName()
-                                       .substring(0, 1)
-                                       .toUpperCase()
-                                       .concat(field.getName()
-                                                    .substring(1));
+                    final String name = field.getName()
+                        .substring(0, 1)
+                        .toUpperCase()
+                        .concat(field.getName()
+                            .substring(1));
                     Method method = null;
                     try {
                         method = type.getMethod("get" + name);
@@ -1142,8 +1349,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         map.put(field.getName(), method);
                     }
                     else {
-                        new NoSuchMethodException(
-                                type.getCanonicalName() + ".get" + name + " or " + type.getCanonicalName() + ".is" + name + " not found!").printStackTrace();
+                        new NoSuchMethodException(type.getCanonicalName() + ".get" + name + " or " + type.getCanonicalName() + ".is" + name + " not found!")
+                            .printStackTrace();
                     }
                 }
             }
@@ -1167,7 +1374,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             fields = getAllFields(fields, type.getSuperclass(), map);
         }
 
-        for (Field field : fields) {
+        for (final Field field : fields) {
             map.put(field.getName(), field);
         }
         return fields;
@@ -1186,7 +1393,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         if (this.isPreProcessingPerformed) {
             performInitialization();
 
-            for (ExportExcelSheetConfiguration sheetConfig : this.exportExcelConfiguration.getSheetConfigs()) {
+            for (final ExportExcelSheetConfiguration sheetConfig : this.exportExcelConfiguration.getSheetConfigs()) {
                 if (sheetConfig.getIsDefaultSheetTitleRequired()) {
                     sheetConfig.setDefaultSheetRowNum(addReportTitleAtFirst(this.workbook, sheetConfig));
                 }
@@ -1195,14 +1402,14 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                     sheetConfig.setDefaultSheetRowNum(addGeneratedByAtFirst(this.workbook, sheetConfig));
                 }
 
-                for (ExportExcelComponentConfiguration componentConfig : sheetConfig.getComponentConfigs()) {
+                for (final ExportExcelComponentConfiguration componentConfig : sheetConfig.getComponentConfigs()) {
                     if (componentConfig.getGrid() != null) {
                         sheetConfig.setDefaultSheetRowNum(addVaadinGridToExcelSheet(componentConfig.getGrid(), this.workbook, sheetConfig, componentConfig));
                     }
 
                     if (componentConfig.getTreeTable() != null) {
-                        sheetConfig.setDefaultSheetRowNum(addTreeTableToExcelSheet(componentConfig.getTreeTable(), this.workbook, sheetConfig,
-                                                                                   componentConfig));
+                        sheetConfig
+                            .setDefaultSheetRowNum(addTreeTableToExcelSheet(componentConfig.getTreeTable(), this.workbook, sheetConfig, componentConfig));
                     }
 
                     if (componentConfig.getTable() != null) {
@@ -1224,7 +1431,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
     @Override
     protected File generateReportFile() {
 
-        Boolean proceed = addConfiguredComponentToExcel();
+        final Boolean proceed = addConfiguredComponentToExcel();
         File tempFile = null;
         if (proceed) {
 
@@ -1234,11 +1441,11 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                 fileOut = new FileOutputStream(tempFile);
                 this.workbook.write(fileOut);
                 if (null == this.mimeType) {
-                    setMimeType(EXCEL_MIME_TYPE);
+                    setMimeType(ExportUtility.EXCEL_MIME_TYPE);
                 }
             }
             catch (final IOException e) {
-                LOGGER.warn("Converting to XLS failed with IOException " + e);
+                ExportToExcelUtility.LOGGER.warn("Converting to XLS failed with IOException " + e);
                 return null;
             }
             finally {
@@ -1261,9 +1468,9 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 
     /**
      * Export the workbook to the end-user.
-     * 
+     *
      * Code obtained from: http://vaadin.com/forum/-/message_boards/view_message/159583
-     * 
+     *
      * @return true, if successful
      */
     @Override
@@ -1348,35 +1555,35 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @return the map
      */
     protected Map<String, XSSFCellStyle> createStyles(final XSSFWorkbook wb) {
-        Map<String, XSSFCellStyle> styles = new HashMap<String, XSSFCellStyle>();
-        XSSFDataFormat fmt = wb.createDataFormat();
+        final Map<String, XSSFCellStyle> styles = new HashMap<>();
+        final XSSFDataFormat fmt = wb.createDataFormat();
 
-        XSSFCellStyle style1 = wb.createCellStyle();
+        final XSSFCellStyle style1 = wb.createCellStyle();
         style1.setAlignment(XSSFCellStyle.ALIGN_RIGHT);
         style1.setDataFormat(fmt.getFormat("0.0%"));
         style1.setWrapText(false);
         styles.put("percent", style1);
 
-        XSSFCellStyle style2 = wb.createCellStyle();
+        final XSSFCellStyle style2 = wb.createCellStyle();
         style2.setAlignment(XSSFCellStyle.ALIGN_CENTER);
         style2.setDataFormat(fmt.getFormat("0.0X"));
         style2.setWrapText(false);
         styles.put("coeff", style2);
 
-        XSSFCellStyle style3 = wb.createCellStyle();
+        final XSSFCellStyle style3 = wb.createCellStyle();
         style3.setAlignment(XSSFCellStyle.ALIGN_RIGHT);
         style3.setDataFormat(fmt.getFormat("$#,##0.00"));
         style3.setWrapText(false);
         styles.put("currency", style3);
 
-        XSSFCellStyle style4 = wb.createCellStyle();
+        final XSSFCellStyle style4 = wb.createCellStyle();
         style4.setAlignment(XSSFCellStyle.ALIGN_RIGHT);
         style4.setDataFormat(fmt.getFormat("mmm dd"));
         style4.setWrapText(false);
         styles.put("date", style4);
 
-        XSSFCellStyle style5 = wb.createCellStyle();
-        XSSFFont headerFont = wb.createFont();
+        final XSSFCellStyle style5 = wb.createCellStyle();
+        final XSSFFont headerFont = wb.createFont();
         headerFont.setBold(true);
         style5.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
         style5.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
@@ -1384,8 +1591,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         style5.setWrapText(false);
         styles.put("header", style5);
 
-        XSSFCellStyle style6 = wb.createCellStyle();
-        XSSFFont font = wb.createFont();
+        final XSSFCellStyle style6 = wb.createCellStyle();
+        final XSSFFont font = wb.createFont();
         font.setBoldweight(Font.BOLDWEIGHT_BOLD);
         style6.setFont(font);
         style6.setWrapText(false);
@@ -1401,9 +1608,9 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @return the default report title style
      */
     protected XSSFCellStyle getDefaultReportTitleStyle(final XSSFWorkbook myWorkBook) {
-        XSSFCellStyle defaultReportTitleStyle = myWorkBook.createCellStyle();
+        final XSSFCellStyle defaultReportTitleStyle = myWorkBook.createCellStyle();
 
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
         boldFont.setFontHeightInPoints((short) 14);
 
@@ -1419,8 +1626,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @return the default generated by style
      */
     protected XSSFCellStyle getDefaultGeneratedByStyle(final XSSFWorkbook myWorkBook) {
-        XSSFCellStyle defaultGeneratedByStyle = myWorkBook.createCellStyle();
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFCellStyle defaultGeneratedByStyle = myWorkBook.createCellStyle();
+        final XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
         boldFont.setFontHeightInPoints((short) 10);
 
@@ -1442,7 +1649,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
         headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.BLACK);
 
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
         boldFont.setColor(IndexedColors.WHITE.getIndex());
 
@@ -1465,7 +1672,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         headerCellStyle.setAlignment(CellStyle.ALIGN_CENTER);
         headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.BLACK);
 
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
 
         headerCellStyle.setFont(boldFont);
 
@@ -1485,7 +1692,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
         headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.BLACK);
 
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
         boldFont.setColor(IndexedColors.WHITE.getIndex());
 
@@ -1508,7 +1715,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         headerCellStyle.setAlignment(CellStyle.ALIGN_CENTER);
         headerCellStyle.setWrapText(true);
 
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
 
         headerCellStyle.setFont(boldFont);
 
@@ -1529,7 +1736,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         headerCellStyle.setAlignment(CellStyle.ALIGN_LEFT);
         headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.WHITE);
 
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setColor(IndexedColors.WHITE.getIndex());
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
@@ -1552,7 +1759,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         headerCellStyle.setAlignment(CellStyle.ALIGN_LEFT);
         headerCellStyle = setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Color.WHITE);
 
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setColor(IndexedColors.WHITE.getIndex());
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
@@ -1587,7 +1794,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         cellStyle = myWorkBook.createCellStyle();
         cellStyle.setFillForegroundColor(new XSSFColor(new Color(189, 203, 211)));
         cellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
-        XSSFFont boldFont = myWorkBook.createFont();
+        final XSSFFont boldFont = myWorkBook.createFont();
         boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
         cellStyle.setFont(boldFont);
@@ -1643,7 +1850,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         if (val == null) {
             return null;
         }
-        DateFormat df = new SimpleDateFormat(sheetConfiguration.getDateFormat(), this.sourceUI.getLocale());
+        final DateFormat df = new SimpleDateFormat("EEE, dd.MM.yyyy", this.sourceUI.getLocale());
         return df.format(val);
     }
 
@@ -1655,17 +1862,17 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @return the string
      */
     public String localizedFormat(final String value, final Boolean isIntOrBigD) {
-        Locale loc = this.sourceUI.getLocale();
+        final Locale loc = this.sourceUI.getLocale();
         if (isIntOrBigD) {
-            Integer modifiedValue = unLocalizedFormatForInt(value);
+            final Integer modifiedValue = unLocalizedFormatForInt(value);
 
-            NumberFormat nf = NumberFormat.getNumberInstance(loc);
+            final NumberFormat nf = NumberFormat.getNumberInstance(loc);
             nf.setParseIntegerOnly(true);
             return nf.format(modifiedValue);
         }
         else {
-            BigDecimal modifiedValue = unLocalizedFormatForBigDecimal(value);
-            NumberFormat nf = NumberFormat.getNumberInstance(loc);
+            final BigDecimal modifiedValue = unLocalizedFormatForBigDecimal(value);
+            final NumberFormat nf = NumberFormat.getNumberInstance(loc);
             nf.setMinimumFractionDigits(2);
             nf.setMaximumFractionDigits(2);
             return nf.format(modifiedValue);
@@ -1680,8 +1887,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @return the string
      */
     public String formatFloat(final Double value) {
-        Locale loc = this.sourceUI.getLocale();
-        NumberFormat nf = NumberFormat.getNumberInstance(loc);
+        final Locale loc = this.sourceUI.getLocale();
+        final NumberFormat nf = NumberFormat.getNumberInstance(loc);
         nf.setMinimumFractionDigits(2);
         nf.setMaximumFractionDigits(2);
         return nf.format(value);
@@ -1694,7 +1901,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @return the integer
      */
     public Integer unLocalizedFormatForInt(final String value) {
-        Locale loc = this.sourceUI.getLocale();
+        final Locale loc = this.sourceUI.getLocale();
         Integer modifiedValue = 0;
 
         if (value != null && !value.contains(".") && !value.contains(",")) {
@@ -1702,11 +1909,11 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         }
         else {
             if (value != null && loc.getLanguage()
-                                    .equals("en")) {
+                .equals("en")) {
                 modifiedValue = Integer.valueOf(value.replaceAll(",", ""));
             }
             else if (value != null && loc.getLanguage()
-                                         .equals("de")) {
+                .equals("de")) {
                 modifiedValue = Integer.valueOf(value.replaceAll("\\.", ""));
             }
         }
@@ -1720,8 +1927,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
      * @return the big decimal
      */
     public BigDecimal unLocalizedFormatForBigDecimal(final String value) {
-        Locale loc = UI.getCurrent()
-                       .getLocale();
+        final Locale loc = UI.getCurrent()
+            .getLocale();
         BigDecimal modifiedValue = new BigDecimal(Double.valueOf("0"));
 
         if (value != null && !value.contains(".") && !value.contains(",")) {
@@ -1730,12 +1937,12 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
         }
         else {
             if (value != null && loc.getLanguage()
-                                    .equals("en")) {
+                .equals("en")) {
 
                 modifiedValue = BigDecimal.valueOf(Double.valueOf(value.replaceAll(",", "")));
             }
             else if (value != null && loc.getLanguage()
-                                         .equals("de")) {
+                .equals("de")) {
 
                 String temp = value;
                 if (value.contains(".")) {
@@ -1750,6 +1957,18 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
             }
         }
         return modifiedValue;
+    }
+
+    private XSSFCellStyle getEvaluatedStyle(final Boolean isParent, final XSSFWorkbook myWorkBook,
+            final ExportExcelComponentConfiguration componentConfiguration, final Integer localRow) {
+        if (isParent) {
+            return getDefaultTableContentParentStyle(myWorkBook);
+        }
+        if (localRow % 2 == 0) {
+            return isParent ? getDefaultTableContentParentStyle(myWorkBook) : componentConfiguration.getrTableContentStyle();
+        }
+        return null;
+
     }
 
 }

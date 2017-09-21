@@ -1,20 +1,18 @@
 /*
- * 
+ *
  */
 package org.vaadin.addons.excelexporter;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-
-import net.karneim.pojobuilder.GeneratePojoBuilder;
 
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.vaadin.addons.excelexporter.formatter.ColumnFormatter;
+import org.vaadin.addons.excelexporter.columnconfigs.ColumnConfig;
 
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TreeTable;
+
+import net.karneim.pojobuilder.GeneratePojoBuilder;
 
 /**
  * The Class ExportExcelComponentConfiguration is used to configure the component as in Table, Tree Table or Grid Several additional properties such as
@@ -23,23 +21,22 @@ import com.vaadin.ui.TreeTable;
  * @author Kartik Suba
  */
 @GeneratePojoBuilder(
-        intoPackage = "*.builder")
+    intoPackage = "*.builder")
 public class ExportExcelComponentConfiguration {
 
     /** The visible properties. */
     Object[] visibleProperties;
 
-    /** The date formatting properties. */
-    List<String> dateFormattingProperties;
+    /** The column configs. */
+    List<? extends ColumnConfig> columnConfigs;
 
-    /** The integer formatting properties. */
-    List<String> integerFormattingProperties;
+    public List<? extends ColumnConfig> getColumnConfigs() {
+        return this.columnConfigs;
+    }
 
-    /** The float formatting properties. */
-    List<String> floatFormattingProperties;
-
-    /** The boolean formatting properties. */
-    List<String> booleanFormattingProperties;
+    public void setColumnConfigs(final List<? extends ColumnConfig> columnConfigs) {
+        this.columnConfigs = columnConfigs;
+    }
 
     /** The header configs. */
     List<ComponentHeaderConfiguration> headerConfigs;
@@ -64,9 +61,6 @@ public class ExportExcelComponentConfiguration {
 
     /** The resultant table content style. */
     XSSFCellStyle rTableContentStyle = null;
-
-    /** The column formatters. */
-    Map<Object, ColumnFormatter> columnFormatters = new LinkedHashMap<Object, ColumnFormatter>();
 
     /** The table. */
     Table table;
@@ -224,68 +218,68 @@ public class ExportExcelComponentConfiguration {
         this.rTableContentStyle = rTableContentStyle;
     }
 
-    /**
-     * Gets the date formatting properties.
-     *
-     * @return the date formatting properties
-     */
-    public List<String> getDateFormattingProperties() {
-        return this.dateFormattingProperties;
-    }
-
-    /**
-     * Sets the date formatting properties.
-     *
-     * @param dateFormattingProperties the new date formatting properties
-     */
-    public void setDateFormattingProperties(final List<String> dateFormattingProperties) {
-        this.dateFormattingProperties = dateFormattingProperties;
-    }
-
-    /**
-     * Gets the integer formatting properties.
-     *
-     * @return the integer formatting properties
-     */
-    public List<String> getIntegerFormattingProperties() {
-        return this.integerFormattingProperties;
-    }
-
-    /**
-     * Sets the integer formatting properties.
-     *
-     * @param integerFormattingProperties the new integer formatting properties
-     */
-    public void setIntegerFormattingProperties(final List<String> integerFormattingProperties) {
-        this.integerFormattingProperties = integerFormattingProperties;
-    }
-
-    /**
-     * Gets the float formatting properties.
-     *
-     * @return the float formatting properties
-     */
-    public List<String> getFloatFormattingProperties() {
-        return this.floatFormattingProperties;
-    }
-
-    /**
-     * Sets the float formatting properties.
-     *
-     * @param floatFormattingProperties the new float formatting properties
-     */
-    public void setFloatFormattingProperties(final List<String> floatFormattingProperties) {
-        this.floatFormattingProperties = floatFormattingProperties;
-    }
-
-    /**
-     * Sets the boolean formatting properties.
-     *
-     * @param booleanFormattingProperties the new boolean formatting properties
-     */
-    public void setBooleanFormattingProperties(final List<String> booleanFormattingProperties) {
-        this.booleanFormattingProperties = booleanFormattingProperties;
-    }
+    // /**
+    // * Gets the date formatting properties.
+    // *
+    // * @return the date formatting properties
+    // */
+    // public List<String> getDateFormattingProperties() {
+    // return this.dateFormattingProperties;
+    // }
+    //
+    // /**
+    // * Sets the date formatting properties.
+    // *
+    // * @param dateFormattingProperties the new date formatting properties
+    // */
+    // public void setDateFormattingProperties(final List<String> dateFormattingProperties) {
+    // this.dateFormattingProperties = dateFormattingProperties;
+    // }
+    //
+    // /**
+    // * Gets the integer formatting properties.
+    // *
+    // * @return the integer formatting properties
+    // */
+    // public List<String> getIntegerFormattingProperties() {
+    // return this.integerFormattingProperties;
+    // }
+    //
+    // /**
+    // * Sets the integer formatting properties.
+    // *
+    // * @param integerFormattingProperties the new integer formatting properties
+    // */
+    // public void setIntegerFormattingProperties(final List<String> integerFormattingProperties) {
+    // this.integerFormattingProperties = integerFormattingProperties;
+    // }
+    //
+    // /**
+    // * Gets the float formatting properties.
+    // *
+    // * @return the float formatting properties
+    // */
+    // public List<String> getFloatFormattingProperties() {
+    // return this.floatFormattingProperties;
+    // }
+    //
+    // /**
+    // * Sets the float formatting properties.
+    // *
+    // * @param floatFormattingProperties the new float formatting properties
+    // */
+    // public void setFloatFormattingProperties(final List<String> floatFormattingProperties) {
+    // this.floatFormattingProperties = floatFormattingProperties;
+    // }
+    //
+    // /**
+    // * Sets the boolean formatting properties.
+    // *
+    // * @param booleanFormattingProperties the new boolean formatting properties
+    // */
+    // public void setBooleanFormattingProperties(final List<String> booleanFormattingProperties) {
+    // this.booleanFormattingProperties = booleanFormattingProperties;
+    // }
 
     /**
      * Sets the header configs.
@@ -303,15 +297,6 @@ public class ExportExcelComponentConfiguration {
      */
     public void setFooterConfigs(final List<ComponentFooterConfiguration> footerConfigs) {
         this.footerConfigs = footerConfigs;
-    }
-
-    /**
-     * Sets the column formatters.
-     *
-     * @param columnFormatters the column formatters
-     */
-    public void setColumnFormatters(final Map<Object, ColumnFormatter> columnFormatters) {
-        this.columnFormatters = columnFormatters;
     }
 
     /**
@@ -368,14 +353,14 @@ public class ExportExcelComponentConfiguration {
         this.tableContentStyle = tableContentStyle;
     }
 
-    /**
-     * Gets the boolean formatting properties.
-     *
-     * @return the boolean formatting properties
-     */
-    public List<String> getBooleanFormattingProperties() {
-        return this.booleanFormattingProperties;
-    }
+    // /**
+    // * Gets the boolean formatting properties.
+    // *
+    // * @return the boolean formatting properties
+    // */
+    // public List<String> getBooleanFormattingProperties() {
+    // return this.booleanFormattingProperties;
+    // }
 
     /**
      * Gets the header configs.
@@ -395,25 +380,4 @@ public class ExportExcelComponentConfiguration {
         return this.footerConfigs;
     }
 
-    /**
-     * Gets the column formatters.
-     *
-     * @return the column formatters
-     */
-    public Map<Object, ColumnFormatter> getColumnFormatters() {
-        return this.columnFormatters;
-    }
-
-    /**
-     * Gets the column formatter.
-     *
-     * @param columnId the column id
-     * @return the column formatter
-     */
-    public ColumnFormatter getColumnFormatter(final Object columnId) {
-        if (this.columnFormatters != null && !this.columnFormatters.isEmpty() && this.columnFormatters.containsKey(columnId)) {
-            return this.columnFormatters.get(columnId);
-        }
-        return null;
-    }
 }

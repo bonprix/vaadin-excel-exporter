@@ -1,5 +1,5 @@
 /*
- * 
+ *
  */
 package org.vaadin.addons.excelexporter;
 
@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.karneim.pojobuilder.GeneratePojoBuilder;
-
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+
+import net.karneim.pojobuilder.GeneratePojoBuilder;
 
 /**
  * The Class ExportExcelSheetConfiguration is used to configure each sheet. Several things such as report title, sheet name, component configs etc. can also be
@@ -20,7 +20,7 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
  * @author Kartik Suba
  */
 @GeneratePojoBuilder(
-        intoPackage = "*.builder")
+    intoPackage = "*.builder")
 public class ExportExcelSheetConfiguration {
 
     /** The is total row required. */
@@ -42,7 +42,7 @@ public class ExportExcelSheetConfiguration {
     Integer defaultSheetRowNum = 0;
 
     /** The date format. */
-    String dateFormat = "EEE, dd.MM.yyyy";
+    String dateFormat = "ddd, dd.MM.yyyy";
 
     /** The report title row content. */
     String reportTitleRowContent;
@@ -78,10 +78,10 @@ public class ExportExcelSheetConfiguration {
     Integer[] columnForGeneratedByRegion = new Integer[2];
 
     /** The component configs. */
-    List<ExportExcelComponentConfiguration> componentConfigs = new ArrayList<ExportExcelComponentConfiguration>();
+    List<ExportExcelComponentConfiguration> componentConfigs = new ArrayList<>();
 
     /** The additional header info. */
-    Map<String, String> additionalHeaderInfo = new HashMap<String, String>();
+    Map<String, String> additionalHeaderInfo = new HashMap<>();
 
     /** The sheet name. */
     String sheetName;
