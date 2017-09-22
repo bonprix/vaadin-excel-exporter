@@ -4,7 +4,7 @@
 	<groupId>org.vaadin.addons</groupId>
 	<artifactId>vaadin-excel-exporter-demo</artifactId>
 	<packaging>war</packaging>
-	<version>1.0.7-SNAPSHOT</version>
+	<version>1.0.8-SNAPSHOT</version>
 	<name>Excel Exporter Demo</name>
 
 	<properties>
