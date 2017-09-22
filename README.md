@@ -161,7 +161,7 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 
 - Updated the Demo Project to showcase the same. Also you can refer to the advance snipped section for example.
 
-### Version 1.0.5
+### Version 1.0.5 and 1.0.6
 
 - Added support for nested properties in case of BeanItemContainer.
 
@@ -169,6 +169,12 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 - https://github.com/bonprix/vaadin-excel-exporter/issues/3
 - https://github.com/bonprix/vaadin-excel-exporter/issues/9
 - https://github.com/bonprix/vaadin-excel-exporter/pull/16
+
+### Version 1.0.7
+
+- Allowed specifying data type for each column with the help of ColumnConfig class, thereby opening the scope of excel formulas on numbers and dates.
+- Removed Suffix and Prefix column formatter classes instead allowed optional configuration in the ColumnConfig itself.
+- Made the current DateTime optional in the Excel filename.
 
 ## Roadmap
 
