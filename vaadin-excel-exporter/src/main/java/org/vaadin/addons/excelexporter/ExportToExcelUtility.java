@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import com.vaadin.data.Property;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -1011,6 +1012,18 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                         .getContainerDataSource()
                         .getContainerProperty(itemId, visibleColumns[columns])
                         .getValue();
+                }
+                else if (componentConfiguration.getTable() != null && componentConfiguration.getTable()
+                        .getContainerDataSource() instanceof BeanItemContainer) {
+
+                    // These properties cannot be taken care by the above method map solution
+                    // This code is mainly to include the nested properties
+                    Property containerProperty = componentConfiguration.getTable()
+                            .getContainerDataSource()
+                            .getContainerProperty(itemId, visibleColumns[columns]);
+                    if(containerProperty != null) { // Generated column
+                        obj = containerProperty.getValue();
+                    }
                 }
 
                 final Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
