@@ -1019,7 +1019,9 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
                     cellStyle = getDefaultTableContentParentStyle(myWorkBook);
                 }
                 if (localRow % 2 == 0) {
-                    cellStyle = isParent ? getDefaultTableContentParentStyle(myWorkBook) : componentConfiguration.getrTableContentStyle();
+                    cellStyle = isParent ? getDefaultTableContentParentStyle(myWorkBook)
+                            : ((componentConfiguration.getTableContentStyle() != null) ? componentConfiguration.getTableContentStyle()
+                                    : getDefaultTableContentStyle(this.workbook));
                 }
 
                 if ((obj != null)) {
