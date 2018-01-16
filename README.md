@@ -176,6 +176,10 @@ Debugging client side code in the vaadin-excel-exporter-demo project:
 - Removed Suffix and Prefix column formatter classes instead allowed optional configuration in the ColumnConfig itself.
 - Made the current DateTime optional in the Excel filename.
 
+### Version 1.0.8
+
+- Bug Fix: Datatype formatting was working only on odd rows. Now it has been fixed. No code change required.
+
 ## Roadmap
 
 Recently Released :
