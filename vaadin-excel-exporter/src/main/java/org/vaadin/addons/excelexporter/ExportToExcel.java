@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -29,10 +30,12 @@ import org.vaadin.addons.excelexporter.configuration.ExportExcelSheetConfigurati
 import org.vaadin.addons.excelexporter.configuration.MergedCell;
 import org.vaadin.addons.excelexporter.model.ExportType;
 import org.vaadin.addons.excelexporter.utils.ExcelStyleUtil;
-import org.vaadin.addons.excelexporter.utils.NameGenerationUtil;
 import org.vaadin.addons.excelexporter.utils.FormatUtil;
+import org.vaadin.addons.excelexporter.utils.NameGenerationUtil;
 
+import com.vaadin.data.provider.ConfigurableFilterDataProvider;
 import com.vaadin.data.provider.ListDataProvider;
+import com.vaadin.data.provider.Query;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.components.grid.FooterRow;
 import com.vaadin.ui.components.grid.HeaderRow;
@@ -189,6 +192,9 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 		Collection<BEANTYPE> items;
 		if (grid.getDataProvider() instanceof ListDataProvider) {
 			items = ((ListDataProvider<BEANTYPE>) grid.getDataProvider()).getItems();
+		} else if (grid.getDataProvider() instanceof ConfigurableFilterDataProvider) {
+			items = new ArrayList<>();
+			((ConfigurableFilterDataProvider<BEANTYPE, Void, ?>) grid.getDataProvider()).fetch(new Query<>()).forEach(item -> items.add(item));
 		} else {
 			throw new UnsupportedOperationException("dataProvider " + grid.getDataProvider()
 				.getClass() + " of grid is not supported");
