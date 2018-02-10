@@ -6,6 +6,6 @@
 	<inherits name="com.vaadin.DefaultWidgetSet" /> 
 
 	<!-- Widget styles in public -directory -->
-	<stylesheet src="vaadin-excel-exporter-root/styles.css"/>
+	<stylesheet src="vaadin-excel-exporter/styles.css"/>
 
 </module>
