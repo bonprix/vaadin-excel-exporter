@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.apache.commons.csv.CSVFormat;
@@ -112,18 +113,13 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 	/** The method map. */
 	Hashtable<String, Method> methodMap = new Hashtable<>();
 
+	/**
+	 * The map for CSV Headers & Values
+	 */
+	private Map<String, Map<Object[], List<List<String>>>> sheetConfigMap;
+
 	/** The resultant export type. */
 	private ExportType resultantExportType = null;
-
-	/**
-	 * The Headers for CSV
-	 */
-	private Object[] columnHeaderKeys;
-
-	/**
-	 * Row Values for CSV
-	 */
-	private List<List<String>> rowValuesList;
 
 	/**
 	 * Gets the resultant export type.
@@ -1609,7 +1605,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 			performInitialization();
 
 			for (final ExportExcelSheetConfiguration sheetConfig : this.exportExcelConfiguration.getSheetConfigs()) {
-				if (!this.resultantExportType.equals(ExportType.CSV)) {
+				if (!isCSV()) {
 					if (sheetConfig.getIsDefaultSheetTitleRequired()) {
 						sheetConfig.setDefaultSheetRowNum(addReportTitleAtFirst(this.workbook, sheetConfig));
 					}
@@ -1619,7 +1615,7 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 					}
 				}
 				for (final ExportExcelComponentConfiguration componentConfig : sheetConfig.getComponentConfigs()) {
-					if (!this.resultantExportType.equals(ExportType.CSV)) {
+					if (!isCSV()) {
 						if (componentConfig.getGrid() != null) {
 							// Adding Configured Header Rows
 							sheetConfig.setDefaultSheetRowNum(addVaadinGridToExcelSheet(componentConfig.getGrid(),
@@ -1673,14 +1669,15 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 	 */
 	private Integer createCSVContent(Grid grid, ExportExcelSheetConfiguration sheetConfiguration,
 			ExportExcelComponentConfiguration componentConfiguration) {
-		System.out.println("=================================");
-		this.rowValuesList = new ArrayList<>();
+		Map<Object[], List<List<String>>> map = new HashMap<>();
+		List<List<String>> rowValuesList = new ArrayList<>();
+		String[] keys = null;
 		// Adding Configured CSV Header Rows
 		if (componentConfiguration.getHeaderConfigs() != null) {
 			ComponentHeaderConfiguration componentHeaderConfiguration = componentConfiguration.getHeaderConfigs()
 				.get(0);
 			if (componentHeaderConfiguration.getColumnHeaderKeys() != null) {
-				this.columnHeaderKeys = componentHeaderConfiguration.getColumnHeaderKeys();
+				keys = componentHeaderConfiguration.getColumnHeaderKeys();
 			}
 		}
 
@@ -1690,8 +1687,10 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 			List<String> addCSVData = addCSVData(	componentConfiguration.getVisibleProperties(), sheetConfiguration,
 													componentConfiguration, itemId,
 													sheetConfiguration.getDefaultSheetRowNum(), Boolean.FALSE);
-			this.rowValuesList.add(addCSVData);
+			rowValuesList.add(addCSVData);
 		}
+		map.put(keys, rowValuesList);
+		this.sheetConfigMap.put(sheetConfiguration.getSheetName(), map);
 
 		return sheetConfiguration.getDefaultSheetRowNum();
 	}
@@ -1797,8 +1796,8 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 			if (null == this.mimeType) {
 				setMimeType(EXCEL_MIME_TYPE);
 			}
-			if (this.resultantExportType.equals(ExportType.CSV)) {
-				return exportAsCSVOnExcel(tempFile, fileOutputStream, this.columnHeaderKeys, this.rowValuesList);
+			if (isCSV()) {
+				return exportAsCSVOnExcel(tempFile, fileOutputStream, this.sheetConfigMap);
 			} else {
 				try {
 					tempFile = File.createTempFile("tmp", "." + this.resultantSelectedExtension);
@@ -1830,20 +1829,32 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 	 * 
 	 *            CSV Type for Export Utility
 	 */
-	private File exportAsCSVOnExcel(File tempFile, FileOutputStream fileOutputStream, Object[] columnHeaderKeys,
-			List<List<String>> rowValuesList) {
+	private File exportAsCSVOnExcel(File tempFile, FileOutputStream fileOutputStream,
+			Map<String, Map<Object[], List<List<String>>>> sheetConfigMap) {
 		FileWriter fileWriter = null;
 		CSVPrinter csvFilePrinter = null;
-		CSVFormat csvFileFormat = CSVFormat.EXCEL.withDelimiter(';');
-
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withDelimiter(';');
 		try {
-			tempFile = File.createTempFile("tmp", "." + this.resultantSelectedExtension);
+			tempFile = File.createTempFile("tmp", "." + ExportType.CSV);
 			fileOutputStream = new FileOutputStream(tempFile);
 			fileWriter = new FileWriter(tempFile);
-			csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
-			csvFilePrinter.printRecord(columnHeaderKeys);
-			for (List<String> string : rowValuesList) {
-				csvFilePrinter.printRecord(string);
+			for (String sheetName : sheetConfigMap.keySet()) {
+				try {
+					csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+					Map<Object[], List<List<String>>> csvHeaderRowMap = sheetConfigMap.get(sheetName);
+					for (Entry<Object[], List<List<String>>> csvHeaderRow : csvHeaderRowMap.entrySet()) {
+						csvFilePrinter.printRecord(sheetName);
+						csvFilePrinter.printRecord(csvHeaderRow.getKey());
+						List<List<String>> rowValueList = csvHeaderRow.getValue();
+						for (List<String> rowValue : rowValueList) {
+							csvFilePrinter.printRecord(rowValue);
+						}
+						csvFilePrinter.println();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
 			}
 		} catch (final IOException e) {
 			ExportToExcelUtility.LOGGER.warn("IOException " + e);
@@ -2412,6 +2423,13 @@ public class ExportToExcelUtility<BEANTYPE> extends ExportUtility {
 		}
 		return null;
 
+	}
+
+	/**
+	 * @return true if CSV Type
+	 */
+	private boolean isCSV() {
+		return this.resultantExportType.equals(ExportType.CSV);
 	}
 
 }
