@@ -9,20 +9,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import net.karneim.pojobuilder.GeneratePojoBuilder;
 
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.vaadin.addons.excelexporter.formatter.ColumnFormatter;
 import org.vaadin.addons.excelexporter.function.DataCellStyleGeneratorFunction;
 import org.vaadin.addons.excelexporter.utils.ExcelStyleUtil;
 
 import com.vaadin.ui.Grid;
+
+import net.karneim.pojobuilder.GeneratePojoBuilder;
 
 /**
  * The Class ExportExcelComponentConfiguration is used to configure the
@@ -56,15 +57,15 @@ public class ExportExcelComponentConfiguration<BEANTYPE> {
 	private List<ComponentFooterConfiguration> footerConfigs;
 
 	/** The table header style function. */
-	private BiFunction<XSSFWorkbook, String, XSSFCellStyle> headerStyleFunction = (workbook, columnId) -> {
-		XSSFCellStyle headerCellStyle = workbook.createCellStyle();
+	private BiFunction<SXSSFWorkbook, String, XSSFCellStyle> headerStyleFunction = (workbook, columnId) -> {
+		XSSFCellStyle headerCellStyle = (XSSFCellStyle) workbook.createCellStyle();
 		headerCellStyle.setFillForegroundColor(new XSSFColor(new Color(50, 86, 110)));
 		headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
 		headerCellStyle.setAlignment(CellStyle.ALIGN_LEFT);
 		headerCellStyle = ExcelStyleUtil.setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE,
 													Boolean.TRUE, Color.WHITE);
 
-		XSSFFont boldFont = workbook.createFont();
+		XSSFFont boldFont = (XSSFFont) workbook.createFont();
 		boldFont.setColor(IndexedColors.WHITE.getIndex());
 		boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
@@ -74,15 +75,15 @@ public class ExportExcelComponentConfiguration<BEANTYPE> {
 	};
 
 	/** The table footer style function. */
-	private BiFunction<XSSFWorkbook, String, XSSFCellStyle> footerStyleFunction = (workbook, columnId) -> {
-		XSSFCellStyle headerCellStyle = workbook.createCellStyle();
+	private BiFunction<SXSSFWorkbook, String, XSSFCellStyle> footerStyleFunction = (workbook, columnId) -> {
+		XSSFCellStyle headerCellStyle = (XSSFCellStyle) workbook.createCellStyle();
 		headerCellStyle.setFillForegroundColor(new XSSFColor(new Color(50, 86, 110)));
 		headerCellStyle.setFillPattern(XSSFCellStyle.SOLID_FOREGROUND);
 		headerCellStyle.setAlignment(CellStyle.ALIGN_LEFT);
 		headerCellStyle = ExcelStyleUtil.setBorders(headerCellStyle, Boolean.TRUE, Boolean.TRUE, Boolean.TRUE,
 													Boolean.TRUE, Color.WHITE);
 
-		XSSFFont boldFont = workbook.createFont();
+		XSSFFont boldFont = (XSSFFont) workbook.createFont();
 		boldFont.setColor(IndexedColors.WHITE.getIndex());
 		boldFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
 
@@ -128,19 +129,19 @@ public class ExportExcelComponentConfiguration<BEANTYPE> {
 		this.grid = grid;
 	}
 
-	public BiFunction<XSSFWorkbook, String, XSSFCellStyle> getHeaderStyleFunction() {
+	public BiFunction<SXSSFWorkbook, String, XSSFCellStyle> getHeaderStyleFunction() {
 		return this.headerStyleFunction;
 	}
 
-	public void setHeaderStyleFunction(BiFunction<XSSFWorkbook, String, XSSFCellStyle> headerStyleFunction) {
+	public void setHeaderStyleFunction(BiFunction<SXSSFWorkbook, String, XSSFCellStyle> headerStyleFunction) {
 		this.headerStyleFunction = headerStyleFunction;
 	}
 
-	public BiFunction<XSSFWorkbook, String, XSSFCellStyle> getFooterStyleFunction() {
+	public BiFunction<SXSSFWorkbook, String, XSSFCellStyle> getFooterStyleFunction() {
 		return this.footerStyleFunction;
 	}
 
-	public void setFooterStyleFunction(BiFunction<XSSFWorkbook, String, XSSFCellStyle> footerStyleFunction) {
+	public void setFooterStyleFunction(BiFunction<SXSSFWorkbook, String, XSSFCellStyle> footerStyleFunction) {
 		this.footerStyleFunction = footerStyleFunction;
 	}
 

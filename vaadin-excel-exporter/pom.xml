@@ -29,16 +29,16 @@
 		<slf4j.version>1.7.12</slf4j.version>
 	</properties>
 
-    <organization>
+	<organization>
 		<name>Kartik Suba (Direction Software Solutions)</name>
 		<url>https://github.com/bonprix/vaadin-excel-exporter</url>
 	</organization>
-	
-    <scm>
+
+	<scm>
 		<url>git://github.com/bonprix/vaadin-excel-exporter.git</url>
 		<connection>scm:git:git://github.com/bonprix/vaadin-excel-exporter.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com:/bonprix/vaadin-excel-exporter.git</developerConnection>
-  	</scm>
+	</scm>
 
 	<issueManagement>
 		<system>GitHub</system>
@@ -72,37 +72,45 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- This can be replaced with TestNG or some other test framework supported by the surefire plugin -->
+		<!-- This can be replaced with TestNG or some other test framework supported 
+			by the surefire plugin -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.1</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/net.karneim/pojobuilder -->
 		<dependency>
-    		<groupId>net.karneim</groupId>
-    		<artifactId>pojobuilder</artifactId>
-    		<version>2.3.3</version>
+			<groupId>net.karneim</groupId>
+			<artifactId>pojobuilder</artifactId>
+			<version>2.3.3</version>
 		</dependency>
-		
+
 		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
 		<dependency>
-    		<groupId>org.apache.poi</groupId>
-    		<artifactId>poi-ooxml</artifactId>
-   			 <version>3.9</version>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.9</version>
 		</dependency>
-		
+
 		<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>${slf4j.version}</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>jul-to-slf4j</artifactId>
-				<version>${slf4j.version}</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.4</version>
 		</dependency>
 	</dependencies>
 
@@ -184,14 +192,14 @@
 			</plugin>
 		</plugins>
 
-		<!-- This is needed for the sources required by the client-side compiler to be
-			included in the produced JARs -->
+		<!-- This is needed for the sources required by the client-side compiler 
+			to be included in the produced JARs -->
 		<resources>
 			<resource>
 				<directory>src/main/java</directory>
 				<excludes>
-                    <exclude>rebel.xml</exclude>
-                </excludes>
+					<exclude>rebel.xml</exclude>
+				</excludes>
 			</resource>
 			<resource>
 				<directory>src/main/resources</directory>

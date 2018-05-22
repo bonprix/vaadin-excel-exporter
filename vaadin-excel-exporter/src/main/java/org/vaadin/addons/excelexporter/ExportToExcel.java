@@ -5,19 +5,26 @@ package org.vaadin.addons.excelexporter;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.addons.excelexporter.configuration.AbstractComponentHeaderFooterConfiguration;
@@ -29,8 +36,8 @@ import org.vaadin.addons.excelexporter.configuration.ExportExcelSheetConfigurati
 import org.vaadin.addons.excelexporter.configuration.MergedCell;
 import org.vaadin.addons.excelexporter.model.ExportType;
 import org.vaadin.addons.excelexporter.utils.ExcelStyleUtil;
-import org.vaadin.addons.excelexporter.utils.NameGenerationUtil;
 import org.vaadin.addons.excelexporter.utils.FormatUtil;
+import org.vaadin.addons.excelexporter.utils.NameGenerationUtil;
 
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.ui.Grid;
@@ -54,13 +61,18 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 	private static String EXCEL_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 	/** The workbook. */
-	protected XSSFWorkbook workbook;
+	protected SXSSFWorkbook workbook;
 
 	/** The export excel configuration. */
 	protected final ExportExcelConfiguration<BEANTYPE> exportExcelConfiguration;
 
 	/** The resultant export type. */
 	protected final ExportType exportType;
+
+	/**
+	 * The map for CSV Headers & Values
+	 */
+	private Map<String, Map<Object[], List<List<String>>>> sheetConfigMap;
 
 	/**
 	 * Gets the resultant export type.
@@ -84,11 +96,51 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 	public ExportToExcel(final ExportType exportType,
 			final ExportExcelConfiguration<BEANTYPE> exportExcelConfiguration) {
 		super(EXCEL_MIME_TYPE);
+		this.sheetConfigMap = new HashMap<>();
 		this.exportType = exportType;
 		this.exportExcelConfiguration = exportExcelConfiguration;
-		this.workbook = new XSSFWorkbook();
+		this.workbook = new SXSSFWorkbook();
 
+		if (isCSV()) {
+			processForCSVFile(this.workbook, exportExcelConfiguration.getSheetConfigs());
+			return;
+		}
 		process(this.workbook, exportExcelConfiguration.getSheetConfigs());
+	}
+
+	/**
+	 * @param sxssfWorkbook
+	 * @param sheetConfigs
+	 */
+	private void processForCSVFile(SXSSFWorkbook sxssfWorkbook,
+			List<ExportExcelSheetConfiguration<BEANTYPE>> sheetConfigs) {
+		for (ExportExcelSheetConfiguration<BEANTYPE> sheetConfig : sheetConfigs) {
+			Sheet sheet = sxssfWorkbook.createSheet(sheetConfig.getSheetname());
+			addComponents(sxssfWorkbook, sheetConfig, sheet);
+		}
+	}
+
+	/**
+	 * @param sxssfWorkbook
+	 * @param sheetConfig
+	 * @param sheet
+	 */
+	@SuppressWarnings("unchecked")
+	private void addComponents(SXSSFWorkbook sxssfWorkbook, ExportExcelSheetConfiguration<BEANTYPE> sheetConfig,
+			Sheet sheet) {
+		for (ExportExcelComponentConfiguration<BEANTYPE> componentConfig : sheetConfig.getComponentConfigs()) {
+			if (componentConfig.getGrid() != null) {
+				Grid<BEANTYPE> grid = componentConfig.getGrid();
+				Collection<BEANTYPE> items;
+				if (grid.getDataProvider() instanceof ListDataProvider) {
+					items = ((ListDataProvider<BEANTYPE>) grid.getDataProvider()).getItems();
+				} else {
+					throw new UnsupportedOperationException("dataProvider " + grid.getDataProvider()
+						.getClass() + " of grid is not supported");
+				}
+				addGridToExcelSheetAsCSV(items, sxssfWorkbook, sheet, sheetConfig, componentConfig);
+			}
+		}
 	}
 
 	/************************************* Constructors *********************************************************/
@@ -104,7 +156,7 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 	 * @param sheetConfigs
 	 * 
 	 */
-	protected void process(XSSFWorkbook workbook, List<ExportExcelSheetConfiguration<BEANTYPE>> sheetConfigs) {
+	protected void process(SXSSFWorkbook workbook, List<ExportExcelSheetConfiguration<BEANTYPE>> sheetConfigs) {
 		for (ExportExcelSheetConfiguration<BEANTYPE> sheetConfig : sheetConfigs) {
 			Sheet sheet = workbook.createSheet(sheetConfig.getSheetname());
 			sheet.setAutobreaks(true);
@@ -116,7 +168,7 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 		}
 	}
 
-	private void addComponents(XSSFWorkbook workbook, ExportExcelSheetConfiguration<BEANTYPE> sheetConfig, Sheet sheet,
+	private void addComponents(SXSSFWorkbook workbook, ExportExcelSheetConfiguration<BEANTYPE> sheetConfig, Sheet sheet,
 			int rowNum) {
 		int tmpRowNum = rowNum;
 		for (ExportExcelComponentConfiguration<BEANTYPE> componentConfig : sheetConfig.getComponentConfigs()) {
@@ -127,7 +179,7 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 		}
 	}
 
-	private int addSheetGeneratedBy(XSSFWorkbook workbook, ExportExcelSheetConfiguration<BEANTYPE> sheetConfig,
+	private int addSheetGeneratedBy(SXSSFWorkbook workbook, ExportExcelSheetConfiguration<BEANTYPE> sheetConfig,
 			Sheet sheet, int rowNum) {
 		int tmpRowNum = rowNum;
 		if (sheetConfig.getIsDefaultGeneratedByRequired()) {
@@ -136,14 +188,14 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 			Cell myHeaderCell2 = myHeaderRow2.createCell(0);
 			myHeaderCell2.setCellValue(sheetConfig.getLoggerInfoRowContent());
 			myHeaderCell2.setCellStyle(sheetConfig.getGeneratedByStyleFunction()
-				.apply(workbook));
+				.apply(workbook.getXSSFWorkbook()));
 			sheet.addMergedRegion(new CellRangeAddress(tmpRowNum, tmpRowNum,
 					sheetConfig.getColumnForGeneratedByRegion()[0], sheetConfig.getColumnForGeneratedByRegion()[1]));
 		}
 		return tmpRowNum;
 	}
 
-	private int addSheetTitle(XSSFWorkbook workbook, ExportExcelSheetConfiguration<BEANTYPE> sheetConfig, Sheet sheet,
+	private int addSheetTitle(SXSSFWorkbook workbook, ExportExcelSheetConfiguration<BEANTYPE> sheetConfig, Sheet sheet,
 			int rowNum) {
 		int tmpRowNum = rowNum;
 		if (sheetConfig.getIsDefaultSheetTitleRequired()) {
@@ -153,7 +205,7 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 
 			myHeaderCell1.setCellValue(sheetConfig.getReportTitleRowContent());
 			myHeaderCell1.setCellStyle(sheetConfig.getReportTitleStyleFunction()
-				.apply(workbook));
+				.apply(workbook.getXSSFWorkbook()));
 			sheet.addMergedRegion(new CellRangeAddress(tmpRowNum, tmpRowNum, sheetConfig.getColumnForTitleRegion()[0],
 					sheetConfig.getColumnForTitleRegion()[1]));
 		}
@@ -182,10 +234,9 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 	 * @return the integer
 	 */
 	@SuppressWarnings("unchecked")
-	protected Integer addGridToExcelSheet(final Grid<BEANTYPE> grid, final XSSFWorkbook myWorkBook, Sheet sheet,
+	protected Integer addGridToExcelSheet(final Grid<BEANTYPE> grid, final SXSSFWorkbook myWorkBook, Sheet sheet,
 			int rowNum, final ExportExcelSheetConfiguration<BEANTYPE> sheetConfiguration,
 			final ExportExcelComponentConfiguration<BEANTYPE> componentConfiguration) {
-
 		Collection<BEANTYPE> items;
 		if (grid.getDataProvider() instanceof ListDataProvider) {
 			items = ((ListDataProvider<BEANTYPE>) grid.getDataProvider()).getItems();
@@ -193,7 +244,6 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 			throw new UnsupportedOperationException("dataProvider " + grid.getDataProvider()
 				.getClass() + " of grid is not supported");
 		}
-
 		return addGridToExcelSheet(items, myWorkBook, sheet, rowNum, sheetConfiguration, componentConfiguration);
 	}
 
@@ -215,7 +265,7 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 	 *            the component configuration
 	 * @return the integer
 	 */
-	protected int addGridToExcelSheet(final Collection<BEANTYPE> itemIds, final XSSFWorkbook myWorkBook, Sheet sheet,
+	protected int addGridToExcelSheet(final Collection<BEANTYPE> itemIds, final SXSSFWorkbook myWorkBook, Sheet sheet,
 			int rowNum, final ExportExcelSheetConfiguration<BEANTYPE> sheetConfiguration,
 			final ExportExcelComponentConfiguration<BEANTYPE> componentConfiguration) {
 
@@ -231,15 +281,161 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 		tmpRowNum = addGridContent(itemIds, myWorkBook, sheet, tmpRowNum, sheetConfiguration, componentConfiguration);
 		tmpRowNum = addGridFooterRows(sheet, tmpRowNum, componentConfiguration);
 
-		// Disabling auto columns for each column
-		for (int columns = 0; columns < componentConfiguration.getVisibleProperties().length; columns++) {
-			sheet.autoSizeColumn(columns, false);
-		}
-
 		return tmpRowNum;
 	}
 
-	private int addGridContent(final Collection<BEANTYPE> itemIds, final XSSFWorkbook myWorkBook, Sheet sheet,
+	/**
+	 * Creates the csv content.
+	 *
+	 * @param itemIds
+	 *            the item ids
+	 * @param myWorkBook
+	 *            the my work book
+	 * @param sheet
+	 *            the sheet
+	 * @param rowNum
+	 *            current rownum
+	 * @param sheetConfiguration
+	 *            the sheet configuration
+	 * @param componentConfiguration
+	 *            the component configuration
+	 */
+	protected void addGridToExcelSheetAsCSV(final Collection<BEANTYPE> itemIds, final SXSSFWorkbook myWorkBook,
+			Sheet sheet, final ExportExcelSheetConfiguration<BEANTYPE> sheetConfiguration,
+			final ExportExcelComponentConfiguration<BEANTYPE> componentConfiguration) {
+		Map<Object[], List<List<String>>> map = new HashMap<>();
+		List<List<String>> rowValuesList = new ArrayList<>();
+		String[] keys = null;
+
+		// Adding Configured CSV Header Rows
+		if (componentConfiguration.getHeaderConfigs() != null) {
+			List<ComponentHeaderConfiguration> headerConfigs = componentConfiguration.getHeaderConfigs();
+			for (ComponentHeaderConfiguration config : headerConfigs) {
+				if (config.getColumnKeys() != null) {
+					keys = config.getColumnKeys();
+				}
+			}
+		}
+		for (final BEANTYPE itemId : itemIds) {
+			List<String> addCSVData = addCSVData(	componentConfiguration.getVisibleProperties(), sheetConfiguration,
+													componentConfiguration, itemId);
+			rowValuesList.add(addCSVData);
+		}
+		map.put(keys, rowValuesList);
+		this.sheetConfigMap.put(sheet.getSheetName(), map);
+	}
+
+	/**
+	 * @param visibleColumns
+	 * @param sheetConfiguration
+	 * @param componentConfiguration
+	 * @param itemId
+	 * @return
+	 */
+	private List<String> addCSVData(String[] visibleColumns, ExportExcelSheetConfiguration<BEANTYPE> sheetConfiguration,
+			ExportExcelComponentConfiguration<BEANTYPE> componentConfiguration, BEANTYPE itemId) {
+
+		String rowVal = null;
+		ArrayList<String> rowValList = new ArrayList<>();
+		try {
+			for (int columns = 0; columns < visibleColumns.length; columns++) {
+				String columnId = componentConfiguration.getVisibleProperties()[columns];
+				Function<BEANTYPE, ?> function = componentConfiguration.getGrid()
+					.getColumn(columnId)
+					.getValueProvider();
+
+				Object obj = function.apply(itemId);
+				if ((obj != null)) {
+					if (componentConfiguration.getDateFormattingProperties() != null
+							&& componentConfiguration.getDateFormattingProperties()
+								.contains(String.valueOf(visibleColumns[columns]))) {
+						rowVal = FormatUtil.formatDate((Date) obj, sheetConfiguration.getDateFormat());
+					} else if (componentConfiguration.getIntegerFormattingProperties() != null
+							&& componentConfiguration.getIntegerFormattingProperties()
+								.contains(String.valueOf(visibleColumns[columns]))) {
+
+						final String formattedInteger = FormatUtil.localizedFormat(obj != null && !String.valueOf(obj)
+							.isEmpty() ? String.valueOf(obj) : null, Boolean.TRUE);
+						final String customFormattedString = applyColumnFormatter(	visibleColumns,
+																					componentConfiguration, itemId,
+																					columns, formattedInteger);
+						rowVal = customFormattedString != null ? customFormattedString : formattedInteger;
+					} else if (componentConfiguration.getFloatFormattingProperties() != null
+							&& componentConfiguration.getFloatFormattingProperties()
+								.contains(String.valueOf(visibleColumns[columns]))) {
+						if (obj instanceof Double) {
+
+							final String formattedDouble = FormatUtil.formatFloat((Double) obj);
+							final String customFormattedString = applyColumnFormatter(	visibleColumns,
+																						componentConfiguration, itemId,
+																						columns, formattedDouble);
+							rowVal = customFormattedString != null ? customFormattedString : formattedDouble;
+						} else if (obj instanceof BigDecimal) {
+
+							final String formattedBigDecimal = FormatUtil.formatFloat(((BigDecimal) obj).doubleValue());
+							final String customFormattedString = applyColumnFormatter(	visibleColumns,
+																						componentConfiguration, itemId,
+																						columns, formattedBigDecimal);
+							rowVal = customFormattedString != null ? customFormattedString : formattedBigDecimal;
+
+						}
+					} else if (componentConfiguration.getBooleanFormattingProperties() != null
+							&& componentConfiguration.getBooleanFormattingProperties()
+								.contains(String.valueOf(visibleColumns[columns]))) {
+						final String customFormattedString = applyColumnFormatter(	visibleColumns,
+																					componentConfiguration, itemId,
+																					columns,
+																					Boolean.valueOf((boolean) obj));
+						rowVal = customFormattedString != null ? customFormattedString : obj.toString();
+					} else {
+						final String customFormattedString = applyColumnFormatter(	visibleColumns,
+																					componentConfiguration, itemId,
+																					columns, obj);
+						rowVal = customFormattedString != null ? customFormattedString : obj.toString();
+					}
+				} else {
+					rowVal = "";
+				}
+				rowValList.add(rowVal);
+			}
+		}
+
+		catch (final Exception e) {
+			ExportToExcel.LOGGER.error("addCSVDataRow" + ") throws + " + e.getMessage());
+		}
+		return rowValList;
+	}
+
+	/**
+	 * Apply column formatter.
+	 *
+	 * @param visibleColumns
+	 *            the visible columns
+	 * @param componentConfiguration
+	 *            the component configuration
+	 * @param itemId
+	 *            the item id
+	 * @param columns
+	 *            the columns
+	 * @param obj
+	 *            the obj
+	 * @return the string
+	 */
+	private String applyColumnFormatter(final Object[] visibleColumns,
+			final ExportExcelComponentConfiguration componentConfiguration, final Object itemId, final int columns,
+			final Object obj) {
+		String formatted = null;
+		if (componentConfiguration.getColumnFormatter(visibleColumns[columns]) != null) {
+			try {
+				formatted = (String) componentConfiguration.getColumnFormatter(visibleColumns[columns])
+					.generateCell(obj, itemId, visibleColumns[columns]);
+			} catch (final Exception e) {
+			}
+		}
+		return formatted;
+	}
+
+	private int addGridContent(final Collection<BEANTYPE> itemIds, final SXSSFWorkbook myWorkBook, Sheet sheet,
 			int rowNum, final ExportExcelSheetConfiguration<BEANTYPE> sheetConfiguration,
 			final ExportExcelComponentConfiguration<BEANTYPE> componentConfiguration) {
 		int tmpRowNum = rowNum;
@@ -336,7 +532,6 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 				sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, tmpStartMerge, endMerge));
 			}
 		}
-		sheet.autoSizeColumn(columns, false);
 		return tmpStartMerge;
 	}
 
@@ -384,7 +579,7 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 	 *            the local row
 	 * @param dataRowContentStart
 	 */
-	protected void addGridDataRow(final XSSFWorkbook myWorkBook, Sheet sheet,
+	protected void addGridDataRow(final SXSSFWorkbook myWorkBook, Sheet sheet,
 			final ExportExcelSheetConfiguration<BEANTYPE> sheetConfiguration,
 			final ExportExcelComponentConfiguration<BEANTYPE> componentConfiguration, final BEANTYPE itemId,
 			final Integer rowNum, int dataRowContentStart) {
@@ -402,7 +597,7 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 				Cell myCell = myRow.createCell(columns, XSSFCell.CELL_TYPE_STRING);
 
 				myCell.setCellStyle(componentConfiguration.getContentStyleFunction()
-					.apply(myWorkBook, columnId, value, rowNum - dataRowContentStart));
+					.apply(myWorkBook.getXSSFWorkbook(), columnId, value, rowNum - dataRowContentStart));
 
 				if (value == null) {
 					myCell.setCellValue("");
@@ -494,8 +689,11 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 	protected File generateReportFile() {
 
 		File tempFile = null;
-
 		FileOutputStream fileOut = null;
+		CSVPrinter csvFilePrinter = null;
+		if (isCSV()) {
+			return exportAsCSVOnExcel(tempFile, fileOut, this.sheetConfigMap);
+		}
 		try {
 			tempFile = File.createTempFile("tmp", "." + this.exportType.getExtension());
 			fileOut = new FileOutputStream(tempFile);
@@ -514,8 +712,65 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 			} catch (final IOException e) {
 				LOGGER.warn("Closing file to XLS failed with IOException " + e);
 			}
-		}
 
+		}
+		return tempFile;
+	}
+
+	/**
+	 * @param tempFile
+	 * @param fileOutputStream
+	 * 
+	 *            CSV Type for Export Utility
+	 */
+	private File exportAsCSVOnExcel(File tempFile, FileOutputStream fileOutputStream,
+			Map<String, Map<Object[], List<List<String>>>> sheetConfigMap) {
+		FileWriter fileWriter = null;
+		CSVPrinter csvFilePrinter = null;
+		CSVFormat csvFileFormat = CSVFormat.DEFAULT.withDelimiter(';');
+
+		try {
+			tempFile = File.createTempFile("tmp", "." + ExportType.CSV);
+			fileOutputStream = new FileOutputStream(tempFile);
+			fileWriter = new FileWriter(tempFile);
+			for (String keys : sheetConfigMap.keySet()) {
+				try {
+					csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
+					Map<Object[], List<List<String>>> map = sheetConfigMap.get(keys);
+					for (Entry<Object[], List<List<String>>> entry : map.entrySet()) {
+						csvFilePrinter.printRecord(keys);
+						csvFilePrinter.printRecord(entry.getKey());
+						List<List<String>> value = entry.getValue();
+						for (List<String> values : value) {
+							csvFilePrinter.printRecord(values);
+						}
+						csvFilePrinter.println();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+			}
+		} catch (final IOException e) {
+			ExportToExcel.LOGGER.warn("IOException " + e);
+		} finally {
+			if (tempFile != null) {
+				tempFile.deleteOnExit();
+			}
+			try {
+				if (fileOutputStream != null) {
+					fileOutputStream.close();
+				}
+				if (fileWriter != null) {
+					fileWriter.flush();
+					fileWriter.close();
+				}
+				if (csvFilePrinter != null) {
+					csvFilePrinter.close();
+				}
+			} catch (final IOException e) {
+			}
+		}
 		return tempFile;
 	}
 
@@ -534,4 +789,10 @@ public class ExportToExcel<BEANTYPE> extends AbstractExportTo {
 							this.exportExcelConfiguration.getMaxFilenameCalendarExtension(), this.exportType));
 	}
 
+	/**
+	 * @return
+	 */
+	private boolean isCSV() {
+		return this.exportType.equals(ExportType.CSV);
+	}
 }

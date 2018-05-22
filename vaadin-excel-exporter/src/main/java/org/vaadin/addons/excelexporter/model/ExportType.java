@@ -14,7 +14,10 @@ public enum ExportType {
 	XLS("xls"),
 
 	/** The xlsx. */
-	XLSX("xlsx");
+	XLSX("xlsx"),
+
+	/** The csv. */
+	CSV("csv");
 
 	/** The id. */
 	private final String extension;
